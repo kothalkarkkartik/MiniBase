@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stunning Wallpapers</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="glass-nav">
+      <div class="logo">Wall<span>Vibe</span></div>
+      <div class="nav-links">
+        <a href="#" class="active" data-cat="all">All</a>
+        <a href="#" data-cat="Nature">Nature</a>
+        <a href="#" data-cat="Abstract">Abstract</a>
+        <a href="#" data-cat="Architecture">Architecture</a>
+        <a href="/seed.html" target="_blank" class="seed-link">🌱 Seed Data</a>
+      </div>
+    </div>
+
+    <header class="hero">
+      <h1>Discover <span>Stunning</span> Wallpapers</h1>
+      <p>Curated high-resolution wallpapers powered by MiniBase.</p>
+    </header>
+
+    <main class="container">
+      <div id="loader" class="loader"></div>
+      <div id="masonry" class="masonry-grid">
+        <!-- Wallpapers injected here -->
+      </div>
+    </main>
+
+    <!-- Modal for full view -->
+    <div id="preview-modal" class="modal">
+      <div class="modal-content">
+        <button id="close-modal" class="close-btn">&times;</button>
+        <img id="preview-img" src="" alt="Wallpaper Preview">
+        <div class="modal-info">
+          <h2 id="preview-title">Title</h2>
+          <span id="preview-cat" class="cat-tag">Category</span>
+          <div style="flex-grow: 1;"></div>
+          <button id="download-btn" class="download-btn">
+            Download (<span id="preview-downloads">0</span>)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "minibase",
+  "version": "1.0.0",
+  "description": "Ultra-lightweight, zero-config, open-source Backend-as-a-Service (BaaS) with embedded SQLite",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "minibase": "./bin/minibase.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node tests/api.test.js"
+  },
+  "keywords": [
+    "baas",
+    "pocketbase",
+    "sqlite",
+    "backend",
+    "realtime",
+    "auth",
+    "database"
+  ],
+  "author": "MiniBase Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^9.0.5",
+    "sharp": "^0.35.3"
+  }
+}

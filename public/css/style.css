@@ -1,0 +1,1678 @@
+/* MiniBase Studio - Crafted Linear / Raycast / Supabase Aesthetic Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+:root {
+  /* Ultra-Refined Obsidian / Graphite Palette (Linear & Raycast Inspired) */
+  --bg-app: #0B0C0E;
+  --bg-sidebar: #0F1115;
+  --bg-surface: #14171D;
+  --bg-surface-elevated: #191D24;
+  --bg-surface-hover: #1E222B;
+  --bg-surface-active: #242935;
+  
+  --bg-input: #0F1115;
+  --bg-input-focus: #14171E;
+
+  /* Razor-Sharp 1px Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-focus: #10B981;
+
+  /* Typography Hierarchy */
+  --text-main: #EDEDED;
+  --text-muted: #8E95A2;
+  --text-dim: #5A6272;
+  --text-faint: #3B4252;
+  --text-inverse: #0B0C0E;
+
+  /* Precision Brand Accents */
+  --brand-primary: #10B981;
+  --brand-primary-hover: #059669;
+  --brand-primary-soft: rgba(16, 185, 129, 0.1);
+  --brand-primary-border: rgba(16, 185, 129, 0.25);
+
+  --accent-blue: #38BDF8;
+  --accent-blue-soft: rgba(56, 189, 248, 0.1);
+
+  --accent-purple: #A78BFA;
+  --accent-purple-soft: rgba(167, 139, 250, 0.1);
+
+  --accent-amber: #FBBF24;
+  --accent-amber-soft: rgba(251, 191, 36, 0.1);
+
+  --accent-red: #F87171;
+  --accent-red-soft: rgba(248, 113, 113, 0.1);
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
+
+  /* Refined Micro Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  /* Precision Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* Subtle Grid Background Texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Layout */
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  z-index: 30;
+}
+
+.brand-header {
+  height: 48px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.brand-wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14.5px;
+  letter-spacing: -0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.brand-wordmark .brand-part-mini {
+  color: #10B981;
+}
+
+.brand-wordmark .brand-part-base {
+  color: #EDEDED;
+}
+
+.brand-wordmark-lg {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.brand-wordmark-lg .brand-part-mini {
+  color: #10B981;
+}
+
+.brand-wordmark-lg .brand-part-base {
+  color: #FFFFFF;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10B981;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.pulse-dot {
+  width: 5px;
+  height: 5px;
+  background-color: #10B981;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #10B981;
+}
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 8px;
+}
+
+.sidebar-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  padding: 8px 8px 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  text-align: left;
+  margin-bottom: 1px;
+  font-family: var(--font-sans);
+}
+
+.sidebar-nav-btn:hover {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.sidebar-nav-btn.active {
+  background: var(--bg-surface-elevated);
+  color: #FFFFFF;
+  border-color: var(--border-default);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+}
+
+.sidebar-nav-btn svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.sidebar-nav-btn:hover svg {
+  color: var(--text-muted);
+}
+
+/* Show delete button on hover */
+.sidebar-col-row:hover .sidebar-del-btn {
+  opacity: 1 !important;
+}
+.sidebar-col-row .sidebar-del-btn:hover {
+  color: var(--accent-rose) !important;
+}
+
+.sidebar-nav-btn.active svg {
+  color: var(--brand-primary);
+}
+
+.sidebar-nav-btn .count-badge {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+
+.sidebar-nav-btn .col-type-tag {
+  margin-left: auto;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 0 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+
+.tag-auth {
+  background: var(--accent-purple-soft);
+  color: #C4B5FD;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.tag-base {
+  background: var(--brand-primary-soft);
+  color: #6EE7B7;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.tag-view {
+  background: var(--accent-blue-soft);
+  color: #7DD3FC;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.sidebar-footer {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-sidebar);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #2D333F 0%, #1A1E26 100%);
+  border: 1px solid var(--border-default);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-email {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* Main View Area */
+.main-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+/* Topbar */
+.topbar {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-app);
+  z-index: 20;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Content Area */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  min-height: 0;
+}
+
+
+/* Precision Buttons (Linear / Vercel style) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 11px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Clean Monochrome High-Contrast Primary Button */
+.btn-primary {
+  background: #FFFFFF;
+  color: #09090B;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover {
+  background: #E4E4E7;
+}
+
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-default);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-strong);
+}
+
+.btn-danger {
+  background: var(--accent-red-soft);
+  color: #FCA5A5;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.btn-danger:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.btn-icon:hover {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border-color: var(--border-default);
+}
+
+/* Inputs & Forms */
+.input, .select, .textarea {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  background: var(--bg-input-focus);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+/* Cards & Modals */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+}
+
+/* Modals & Backdrops */
+.modal-backdrop, .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.modal-card {
+  background: #14171E;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  width: 540px;
+  max-width: 92vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+  animation: modalScaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #12141A;
+}
+
+.modal-title {
+  font-family: 'Plus Jakarta Sans', var(--font-sans);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.modal-body {
+  padding: 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  background: #0E1015;
+}
+
+/* Slide-over Drawer (Linear / Supabase Style) */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 520px;
+  max-width: 95vw;
+  background: #12141A;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -15px 0 35px rgba(0, 0, 0, 0.6);
+  z-index: 10000;
+  animation: drawerSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #151820;
+}
+
+.drawer-title {
+  font-family: 'Plus Jakarta Sans', var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.drawer-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.drawer-footer {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #0E1015;
+}
+
+/* Field Cards in Schema Builder */
+.field-card {
+  background: #181B22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.field-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes drawerSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Tables & Grid (Airtable / Supabase Density) */
+.table-container {
+  flex: 1;
+  overflow: auto;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-sidebar);
+  padding: 8px 12px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-default);
+  border-right: 1px solid var(--border-subtle);
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.data-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #181B22;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+}
+
+.toast.success {
+  border-left: 3px solid #10B981;
+}
+.toast.success svg { color: #10B981; }
+
+.toast.error {
+  border-left: 3px solid #F87171;
+}
+.toast.error svg { color: #F87171; }
+
+.toast.info {
+  border-left: 3px solid #38BDF8;
+}
+.toast.info svg { color: #38BDF8; }
+
+/* Auth / Setup Screen */
+.auth-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.auth-glow {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+/* ── Savage Duck: Confident & Chill Corner Mascot ── */
+.harami-duck-container {
+  position: absolute;
+  top: -48px;
+  right: -22px;
+  z-index: 30;
+  pointer-events: auto;
+  overflow: visible !important;
+}
+
+.duck-interactive-wrapper {
+  display: inline-block;
+  transform-origin: 50% 85%;
+  transform: rotate(8deg);
+  cursor: pointer;
+  user-select: none;
+  overflow: visible !important;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.harami-duck {
+  width: 96px;
+  height: 96px;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.7));
+  display: block;
+  overflow: visible !important;
+  /* subtle breathing — barely visible, just alive */
+  animation: duck-breathe 4s infinite ease-in-out;
+}
+
+/* ── Hover: slight confident lean ── */
+.duck-interactive-wrapper:hover {
+  transform: rotate(4deg) scale(1.06) translateY(-2px);
+}
+
+/* ── Input Focus Reactions ── */
+.duck-interactive-wrapper.duck-watching {
+  transform: rotate(2deg) scale(1.04) translateY(-1px);
+}
+
+.duck-interactive-wrapper.duck-suspicious {
+  transform: rotate(-6deg) scale(1.08) translateY(-3px);
+}
+
+/* ── Click: confident head-nod, NOT a childish spin ── */
+.duck-interactive-wrapper.duck-spinning {
+  animation: duck-nod 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+/* Barely-there idle breathing — just enough to feel alive */
+@keyframes duck-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015) translateY(-1px);
+  }
+}
+
+/* Confident head-nod on click — like "sup bro" */
+@keyframes duck-nod {
+  0% {
+    transform: rotate(8deg) scale(1);
+  }
+  20% {
+    transform: rotate(14deg) scale(1.08) translateY(-6px);
+  }
+  45% {
+    transform: rotate(-4deg) scale(1.02) translateY(2px);
+  }
+  70% {
+    transform: rotate(10deg) scale(1.04) translateY(-2px);
+  }
+  100% {
+    transform: rotate(8deg) scale(1);
+  }
+}
+
+/* ── Thug Life Glasses: clean drop on load ── */
+.thug-shades-group {
+  animation: shades-drop 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+@keyframes shades-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-60px);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Wings: very subtle idle fidget, not flapping ── */
+.wing-left {
+  transform-box: fill-box;
+  transform-origin: 70% 30%;
+  animation: wing-fidget-l 5s infinite ease-in-out;
+}
+
+.wing-right {
+  transform-box: fill-box;
+  transform-origin: 30% 30%;
+  animation: wing-fidget-r 5s infinite ease-in-out 1.5s;
+}
+
+@keyframes wing-fidget-l {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(-3deg); }
+}
+
+@keyframes wing-fidget-r {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(3deg); }
+}
+
+/* ── Cigar Ember: slow realistic glow ── */
+.cigar-ember {
+  animation: ember-glow 2s infinite alternate ease-in-out;
+}
+
+@keyframes ember-glow {
+  0% {
+    fill: #DC2626;
+    filter: drop-shadow(0 0 1px #DC2626);
+    opacity: 0.6;
+  }
+  100% {
+    fill: #F97316;
+    filter: drop-shadow(0 0 5px #F97316);
+    opacity: 1;
+  }
+}
+
+/* ── Smoke: slow lazy drift upward ── */
+.smoke-p1 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smoke-lazy 3.5s infinite ease-out;
+}
+
+.smoke-p2 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smoke-lazy 3.5s infinite ease-out 1.2s;
+}
+
+.smoke-p3 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smoke-lazy 3.5s infinite ease-out 2.4s;
+}
+
+@keyframes smoke-lazy {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3);
+  }
+  20% {
+    opacity: 0.55;
+  }
+  60% {
+    opacity: 0.2;
+    transform: translate(6px, -14px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -28px) scale(1.8);
+  }
+}
+
+/* ── Shades glint: slow occasional reflection ── */
+.shades-glint {
+  animation: glint 4.5s infinite ease-in-out;
+}
+
+@keyframes glint {
+  0%, 80%, 100% {
+    opacity: 0.08;
+  }
+  88% {
+    opacity: 0.7;
+  }
+}
+
+/* ── Gold Chain: subtle occasional shimmer ── */
+.gold-chain-path {
+  animation: chain-shine 5s infinite ease-in-out;
+}
+
+@keyframes chain-shine {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2) drop-shadow(0 0 2px rgba(250, 204, 21, 0.35)); }
+}
+
+/* ── PASSWORD FOCUS: TUKUR-TUKUR PEEKING SYSTEM ── */
+/* When user focuses password field: Duck leans in directly aiming towards the password input */
+.duck-interactive-wrapper.duck-suspicious {
+  transform: rotate(-14deg) translateY(8px) translateX(-8px) scale(1.08) !important;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Sunglasses lift UP onto forehead to expose his peeking eyes! */
+.duck-interactive-wrapper.duck-suspicious .thug-shades-group {
+  transform: translateY(-16px) rotate(-8deg) scale(0.96) !important;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Right wing reaches up to hold the sunglasses up! */
+.duck-interactive-wrapper.duck-suspicious .wing-right-group {
+  transform: rotate(-45deg) translate(-14px, -30px) !important;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Curious raised eyebrows */
+.duck-interactive-wrapper.duck-suspicious .duck-eyebrows {
+  transform: translateY(-3px);
+  transition: transform 0.3s ease;
+}
+
+/* Hide cigar & smoke while peeking at password */
+.duck-interactive-wrapper.duck-suspicious .cigar-group,
+.duck-interactive-wrapper.duck-suspicious .cigar-smoke-group {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease;
+}
+
+/* Interactive Character-by-Character Eye Tracking (Smooth, gradual glide) */
+.duck-pupil-left,
+.duck-pupil-right,
+.duck-glint-left,
+.duck-glint-right {
+  transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+/* When email is focused */
+.duck-interactive-wrapper.duck-watching {
+  transform: rotate(4deg) translateY(3px) scale(1.03) !important;
+  transition: transform 0.3s ease;
+}
+
+/* ── Thought Cloud Bubble ── */
+.duck-speech-bubble {
+  position: absolute;
+  top: -44px;
+  right: 72px;
+  background: #1E2028;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #F1F5F9;
+  padding: 7px 14px;
+  border-radius: 16px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.6);
+  z-index: 40;
+  letter-spacing: 0.01em;
+  overflow: visible;
+}
+
+/* Cloud trail puff circles */
+.duck-speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1E2028;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.duck-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -16px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1E2028;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth appear */
+.duck-speech-bubble.show {
+  animation: thought-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Roast / Savage Angry Mode */
+.duck-speech-bubble.roast-mode {
+  background: #7F1D1D !important;
+  border: 1px solid #EF4444 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.45) !important;
+  font-weight: 700 !important;
+}
+
+.duck-speech-bubble.roast-mode::before,
+.duck-speech-bubble.roast-mode::after {
+  background: #7F1D1D !important;
+  border-color: #EF4444 !important;
+}
+
+.duck-head-skin {
+  transition: fill 0.3s ease, stroke 0.3s ease, filter 0.3s ease;
+}
+
+/* Hidden by default until rage triggers */
+.duck-ear-steam {
+  opacity: 0;
+  pointer-events: none;
+  transform-box: fill-box;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
+}
+
+.duck-interactive-wrapper.duck-rage {
+  filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.65)) drop-shadow(0 8px 24px rgba(0, 0, 0, 0.8)) !important;
+  animation: duck-boiling-rage 1.8s ease-in-out forwards !important;
+}
+
+/* Face turns boiling red hot! */
+.duck-interactive-wrapper.duck-rage .duck-head-skin {
+  animation: duck-face-flush 1.8s ease-in-out forwards;
+}
+
+/* Ear Steam blasts outward from both ears! */
+.duck-interactive-wrapper.duck-rage .ear-steam-left {
+  animation: ear-steam-blast-l 1.8s ease-out forwards;
+}
+
+.duck-interactive-wrapper.duck-rage .ear-steam-right {
+  animation: ear-steam-blast-r 1.8s ease-out forwards;
+}
+
+/* Duck Beak & Lower Jaw Opening Animation */
+.duck-mouth-inside {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.duck-lower-bill {
+  transform-origin: 50px 70px;
+  transform-box: fill-box;
+  transform: translateY(0);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.duck-smirk-line {
+  transition: opacity 0.15s ease;
+}
+
+/* In Rage: Mouth opens wide and lower jaw drops & vibrates in fury! */
+.duck-interactive-wrapper.duck-rage .duck-mouth-inside {
+  opacity: 1;
+}
+
+.duck-interactive-wrapper.duck-rage .duck-smirk-line {
+  opacity: 0;
+}
+
+.duck-interactive-wrapper.duck-rage .duck-lower-bill {
+  animation: lower-jaw-yell 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes lower-jaw-yell {
+  0% {
+    transform: translateY(0);
+  }
+  10% {
+    /* clean subtle vertical drop — no protruding */
+    transform: translateY(3.5px);
+  }
+  25% {
+    transform: translateY(2.2px);
+  }
+  40% {
+    transform: translateY(4px);
+  }
+  60% {
+    transform: translateY(2.8px);
+  }
+  80% {
+    transform: translateY(3.5px);
+  }
+  92% {
+    transform: translateY(1.2px);
+  }
+  100% {
+    /* snaps closed back into place */
+    transform: translateY(0);
+  }
+}
+
+/* ── Dropped Cigar Falling onto Sign-In Button ── */
+.dropped-cigar-prop {
+  position: absolute;
+  width: 26px;
+  height: 6px;
+  border-radius: 2px;
+  background: #78350F;
+  border: 1px solid #451A03;
+  z-index: 25;
+  pointer-events: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  animation: fall-to-button 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.dropped-cigar-prop::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  background: #EAB308;
+  border-radius: 1px 0 0 1px;
+}
+
+.dropped-cigar-prop::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: #EF4444;
+  box-shadow: 0 0 10px #EF4444, 0 0 4px #F97316;
+  border-radius: 0 1px 1px 0;
+}
+
+@keyframes fall-to-button {
+  0% {
+    top: 20px;
+    right: 40px;
+    transform: rotate(-15deg);
+    opacity: 1;
+  }
+  25% {
+    top: 80px;
+    right: 75px;
+    transform: rotate(50deg);
+  }
+  50% {
+    top: 175px;
+    right: 125px;
+    transform: rotate(115deg);
+  }
+  75% {
+    top: 290px;
+    right: 170px;
+    transform: rotate(175deg);
+  }
+  85% {
+    /* bounce off button */
+    top: 280px;
+    right: 175px;
+    transform: rotate(160deg);
+  }
+  100% {
+    /* rests right above the submit button */
+    top: 295px;
+    right: 178px;
+    transform: rotate(168deg);
+    opacity: 1;
+  }
+}
+
+/* Smoke rising from fallen cigar butt on the button */
+.dropped-cigar-smoke {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(226, 232, 240, 0.5);
+  pointer-events: none;
+  z-index: 26;
+  animation: fallen-smoke-rise 1.2s ease-out infinite;
+}
+
+@keyframes fallen-smoke-rise {
+  0% {
+    opacity: 0.8;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-8px, -26px) scale(2.4);
+  }
+}
+
+/* Wings Base Transform */
+.wing-left {
+  transform-origin: 28px 84px;
+  transform: rotate(-20deg);
+}
+
+.wing-right-group {
+  transform-origin: 86px 84px;
+  transform: rotate(20deg);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.held-fresh-cigar {
+  opacity: 0;
+}
+
+/* Duck pulling new fresh cigar from behind back (physically held in wing) */
+.duck-pulling-cigar .wing-right-group {
+  animation: wing-pull-from-behind 1.25s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+.duck-pulling-cigar .held-fresh-cigar {
+  animation: held-cigar-reveal 1.25s ease-in-out forwards !important;
+}
+
+@keyframes wing-pull-from-behind {
+  0% {
+    transform: rotate(20deg) translate(0, 0);
+  }
+  22% {
+    /* reach deep behind duck's back */
+    transform: rotate(85deg) translate(14px, -4px);
+  }
+  55% {
+    /* physically carry cigar forward around side of body */
+    transform: rotate(32deg) translate(8px, -14px);
+  }
+  80% {
+    /* insert cigar directly into beak */
+    transform: rotate(-18deg) translate(-5px, -18px);
+  }
+  90% {
+    /* let go at beak */
+    transform: rotate(-10deg) translate(-2px, -10px);
+  }
+  100% {
+    /* smoothly return to rest pose */
+    transform: rotate(20deg) translate(0, 0);
+  }
+}
+
+@keyframes held-cigar-reveal {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    /* reveals while wing is hidden behind the back */
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  84% {
+    /* handed over into beak */
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Beak cigar lights up when handed over */
+.duck-pulling-cigar .cigar-group {
+  animation: beak-cigar-ignite 1.25s ease-out forwards !important;
+}
+
+@keyframes beak-cigar-ignite {
+  0%, 82% {
+    opacity: 0;
+  }
+  84% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Spark ignite flash when fresh cigar is placed in beak */
+.duck-pulling-cigar .cigar-ember {
+  animation: ember-ignite-flash 1.25s ease-out forwards;
+}
+
+@keyframes ember-ignite-flash {
+  0%, 82% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  88% {
+    /* bright spark ignite */
+    opacity: 1;
+    fill: #FDE047 !important;
+    filter: drop-shadow(0 0 16px #FDE047) drop-shadow(0 0 28px #EF4444) !important;
+    transform: scale(2.8);
+  }
+  100% {
+    opacity: 1;
+    fill: #EF4444 !important;
+    filter: drop-shadow(0 0 6px #EF4444) !important;
+    transform: scale(1);
+  }
+}
+
+@keyframes duck-boiling-rage {
+  0% { transform: rotate(8deg) scale(1); }
+  10% { transform: rotate(-8deg) scale(1.18) translateY(-4px); }
+  20% { transform: rotate(16deg) scale(1.22) translateY(-2px); }
+  30% { transform: rotate(-12deg) scale(1.2) translateY(-5px); }
+  40% { transform: rotate(14deg) scale(1.22) translateY(-2px); }
+  50% { transform: rotate(-10deg) scale(1.18) translateY(-4px); }
+  65% { transform: rotate(12deg) scale(1.14) translateY(-2px); }
+  80% { transform: rotate(-4deg) scale(1.08) translateY(-1px); }
+  100% { transform: rotate(8deg) scale(1) translateY(0); }
+}
+
+@keyframes duck-face-flush {
+  0% {
+    fill: #FBBF24;
+    stroke: #D97706;
+  }
+  15%, 75% {
+    fill: #EF4444;
+    stroke: #991B1B;
+  }
+  100% {
+    fill: #FBBF24;
+    stroke: #D97706;
+  }
+}
+
+@keyframes ear-steam-blast-l {
+  0% {
+    opacity: 0;
+    transform: translate(14px, 6px) scale(0.2);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    opacity: 0.95;
+    transform: translate(-10px, -12px) scale(1.35);
+  }
+  75% {
+    opacity: 0.6;
+    transform: translate(-20px, -24px) scale(1.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-30px, -36px) scale(2.2);
+  }
+}
+
+@keyframes ear-steam-blast-r {
+  0% {
+    opacity: 0;
+    transform: translate(-14px, 6px) scale(0.2);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    opacity: 0.95;
+    transform: translate(10px, -12px) scale(1.35);
+  }
+  75% {
+    opacity: 0.6;
+    transform: translate(20px, -24px) scale(1.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(30px, -36px) scale(2.2);
+  }
+}
+
+/* Bubble burst on disappear — rapid inflate then vanish */
+.duck-speech-bubble.bursting {
+  animation: bubble-burst 0.2s ease-out forwards;
+}
+
+@keyframes thought-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) translateY(8px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.06) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes bubble-burst {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  40% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+/* ── Bubble Shatter Fragments ── */
+.bubble-shard {
+  position: absolute;
+  pointer-events: none;
+  z-index: 41;
+  will-change: transform, opacity;
+  border-radius: 40%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(30, 32, 40, 0.6);
+  backdrop-filter: blur(1px);
+}
+
+/* Shard flight — each gets unique direction via inline CSS custom properties */
+.bubble-shard {
+  animation: shard-fly var(--dur) cubic-bezier(0.15, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes shard-fly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  60% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.15);
+  }
+}
+
+/* ── Water / Cloud Droplets Spray System ── */
+.bubble-drop {
+  position: absolute;
+  pointer-events: none;
+  z-index: 42;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #FFFFFF, #93C5FD 45%, #3B82F6 80%, rgba(59, 130, 246, 0.2) 100%);
+  box-shadow: 0 0 6px rgba(147, 197, 253, 0.8), inset 0 0 2px rgba(255, 255, 255, 0.9);
+  will-change: transform, opacity;
+  animation: drop-spray var(--dur) cubic-bezier(0.12, 0.78, 0.3, 1) var(--delay) forwards;
+}
+
+@keyframes drop-spray {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  60% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0.2);
+  }
+}
+
+/* Duck thinking head tilt */
+.duck-interactive-wrapper.duck-thinking {
+  transform: rotate(12deg) translateY(-2px);
+}
+
+/* Event Feed, Empty State, Code Block */
+.realtime-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.event-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.event-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-sidebar);
+}
+
+.event-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+
+.badge-create { background: var(--brand-primary-soft); color: #6EE7B7; border: 1px solid rgba(16, 185, 129, 0.2); }
+.badge-update { background: var(--accent-blue-soft); color: #7DD3FC; border: 1px solid rgba(56, 189, 248, 0.2); }
+.badge-delete { background: var(--accent-red-soft); color: #FCA5A5; border: 1px solid rgba(248, 113, 113, 0.2); }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.empty-state svg {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  color: var(--text-faint);
+}
+
+.empty-state h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.code-block {
+  background: #0D0F13;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #CBD5E1;
+  overflow-x: auto;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.cell-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}

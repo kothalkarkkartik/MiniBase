@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# MiniBase Local Data & Databases
+minibase_data/
+minibase_test_data/
+tmp_seed/
+*.db
+*.db-wal
+*.db-shm
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Logs & Temp Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# OS / Editor
+.vscode/
+.idea/
+*.swp
+*.swo

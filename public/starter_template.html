@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{COL_NAME_UPPER}} - MiniBase App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="{{ORIGIN}}/js/minibase-sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>body { font-family: "Plus Jakarta Sans", sans-serif; } .mono { font-family: "JetBrains Mono", monospace; }</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-emerald-400 text-2xl font-bold">⚡</span>
+        <div>
+          <h1 class="font-extrabold text-lg text-white capitalize">{{COL_NAME}} Web App</h1>
+          <p class="text-xs text-slate-400">Powered by MiniBase Server</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live Realtime
+        </span>
+        <button onclick="openAddModal()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-sm transition shadow-lg shadow-emerald-500/20">+ Add New</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold text-white capitalize">{{COL_NAME}} Records</h2>
+      <input type="text" id="search-box" placeholder="Search..." oninput="filterRecords(this.value)" class="px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-emerald-500" />
+    </div>
+    <div id="records-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <div id="add-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-white capitalize">Add New {{COL_NAME}}</h3>
+        <button onclick="closeAddModal()" class="text-slate-400 text-xl">&times;</button>
+      </div>
+      <form id="add-form" onsubmit="submitNewRecord(event)">
+        <div id="modal-form-fields" class="flex flex-col gap-3"></div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm font-semibold">Cancel</button>
+          <button type="submit" id="save-btn" class="px-5 py-2 bg-emerald-500 text-slate-950 font-bold rounded-lg text-sm">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const mb = new MiniBase("{{ORIGIN}}");
+    const COL = "{{COL_NAME}}";
+    let allRecords = [];
+    const schemaFields = JSON.parse('{{SCHEMA_JSON}}');
+
+    function initForm() {
+      const c = document.getElementById("modal-form-fields");
+      if (!schemaFields.length) {
+        c.innerHTML = '<input type="text" name="title" placeholder="Title" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white" />';
+        return;
+      }
+      c.innerHTML = schemaFields.map(f => {
+        if (f.type === 'bool') {
+          return '<div><label class="block text-xs font-bold uppercase text-slate-400 mb-1">' + f.name + '</label><label class="flex items-center gap-2 text-sm text-slate-200"><input type="checkbox" name="' + f.name + '" class="rounded bg-slate-800" /><span>Yes / Active</span></label></div>';
+        } else if (f.type === 'number') {
+          return '<div><label class="block text-xs font-bold uppercase text-slate-400 mb-1">' + f.name + '</label><input type="number" step="any" name="' + f.name + '" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white" ' + (f.required ? 'required' : '') + ' /></div>';
+        } else {
+          return '<div><label class="block text-xs font-bold uppercase text-slate-400 mb-1">' + f.name + '</label><input type="text" name="' + f.name + '" placeholder="Enter ' + f.name + '..." class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white" ' + (f.required ? 'required' : '') + ' /></div>';
+        }
+      }).join('');
+    }
+
+    async function loadRecords() {
+      try {
+        const res = await mb.collection(COL).getList(1, 50, { sort: "-created" });
+        allRecords = res.items || [];
+        render(allRecords);
+      } catch (err) {
+        document.getElementById("records-grid").innerHTML = '<div class="col-span-full p-6 text-center text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl">Error loading data: ' + err.message + '</div>';
+      }
+    }
+
+    function render(items) {
+      const grid = document.getElementById("records-grid");
+      if (!items.length) {
+        grid.innerHTML = '<div class="col-span-full py-16 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl"><div class="text-3xl mb-2">📂</div><p class="font-semibold text-slate-300">No records found</p><p class="text-sm text-slate-500 mt-1">Click "+ Add New" to create your first row!</p></div>';
+        return;
+      }
+      grid.innerHTML = items.map(item => {
+        const fields = Object.entries(item).filter(([k]) => !["id","created","updated","collectionId","collectionName"].includes(k));
+        const fieldsHtml = fields.map(([k, v]) => {
+          const isImg = typeof v === 'string' && (v.match(/\.(jpeg|jpg|gif|png|webp)$/i) || v.startsWith('http'));
+          if (isImg) {
+            const src = v.startsWith('http') ? v : mb.baseUrl + '/api/files/' + (item.collectionName || COL) + '/' + item.id + '/' + v;
+            return '<div class="mt-2"><img src="' + src + '" class="w-full h-44 object-cover rounded-lg border border-slate-800" onerror="this.style.display=\'none\'" /></div>';
+          }
+          return '<div class="flex justify-between text-xs py-1 border-b border-slate-800/50"><span class="text-slate-400 capitalize">' + k + ':</span><span class="text-white font-semibold truncate max-w-[160px]">' + String(v) + '</span></div>';
+        }).join('');
+
+        return '<div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">' +
+          '<div>' +
+            '<div class="flex justify-between items-center mb-2"><span class="mono text-xs text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">' + item.id + '</span><span class="text-xs text-slate-500">' + new Date(item.created).toLocaleDateString() + '</span></div>' +
+            '<div class="flex flex-col gap-1">' + fieldsHtml + '</div>' +
+          '</div>' +
+          '<div class="mt-4 pt-2 border-t border-slate-800 flex justify-end"><button onclick="del(\'' + item.id + '\')" class="text-xs text-rose-400 hover:text-rose-300 font-semibold">Delete</button></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function filterRecords(q) {
+      q = (q || '').toLowerCase();
+      render(allRecords.filter(r => JSON.stringify(r).toLowerCase().includes(q)));
+    }
+
+    function openAddModal() {
+      document.getElementById("add-modal").classList.remove("hidden");
+      document.getElementById("add-modal").classList.add("flex");
+    }
+
+    function closeAddModal() {
+      document.getElementById("add-modal").classList.add("hidden");
+      document.getElementById("add-modal").classList.remove("flex");
+    }
+
+    async function submitNewRecord(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = {};
+      for (const [k, v] of fd.entries()) {
+        const el = e.target.querySelector('[name="' + k + '"]');
+        data[k] = el && el.type === 'checkbox' ? el.checked : (el && el.type === 'number' ? Number(v) : v);
+      }
+      try {
+        await mb.collection(COL).create(data);
+        closeAddModal();
+        e.target.reset();
+        await loadRecords();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function del(id) {
+      if (!confirm('Are you sure you want to delete this record?')) return;
+      try {
+        await mb.collection(COL).delete(id);
+        await loadRecords();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    initForm();
+    mb.realtime.subscribe(COL, () => loadRecords());
+    loadRecords();
+  </script>
+</body>
+</html>

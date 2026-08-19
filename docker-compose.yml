@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  minibase:
+    build: .
+    container_name: minibase
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      - NODE_ENV=production
+      - PORT=8090
+      - JWT_SECRET=change-this-to-a-strong-random-key-in-production
+    volumes:
+      - ./minibase_data:/app/minibase_data

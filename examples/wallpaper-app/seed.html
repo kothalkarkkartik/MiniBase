@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seed Data</title>
+  <style>
+    body { font-family: monospace; background: #1a1a2e; color: #fff; padding: 20px; }
+    button { padding: 10px 20px; cursor: pointer; font-size: 16px; background: #38bdf8; border: none; border-radius: 4px; }
+    #log { margin-top: 20px; padding: 10px; background: #0f172a; min-height: 200px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Seed Wallpaper Data</h1>
+  <button id="seed-btn">Start Seeding</button>
+  <div id="log">Waiting to start...</div>
+
+  <script type="module">
+    import { MiniBaseClient } from './minibase-sdk.js';
+    
+    const mb = new MiniBaseClient('http://localhost:8090');
+    const logEl = document.getElementById('log');
+    
+    function log(msg) {
+      logEl.innerHTML += `<div>${msg}</div>`;
+      console.log(msg);
+    }
+
+    const samples = [
+      { title: 'Mountain Peaks', category: 'Nature', downloads: 120, featured: true, url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80' },
+      { title: 'Neon Cyberpunk', category: 'Abstract', downloads: 350, featured: true, url: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?w=800&q=80' },
+      { title: 'Minimalist Desert', category: 'Nature', downloads: 85, featured: false, url: 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=800&q=80' },
+      { title: 'Dark Architecture', category: 'Architecture', downloads: 210, featured: false, url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&q=80' },
+      { title: 'Abstract Waves', category: 'Abstract', downloads: 540, featured: true, url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80' },
+      { title: 'Forest Path', category: 'Nature', downloads: 190, featured: false, url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80' },
+      { title: 'City Lights', category: 'Architecture', downloads: 300, featured: true, url: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?w=800&q=80' }
+    ];
+
+    document.getElementById('seed-btn').addEventListener('click', async () => {
+      log('Starting...');
+      try {
+        log('Logging in as admin...');
+        const authRes = await mb.request('/api/admins/auth-with-password', {
+          method: 'POST',
+          body: JSON.stringify({ email: 'admin@minibase.io', password: 'admin12345' }),
+        });
+        if (authRes.token) {
+          mb.token = authRes.token;
+          log('Logged in successfully!');
+        }
+
+        for (let i = 0; i < samples.length; i++) {
+          const s = samples[i];
+          log(`Downloading ${s.title}...`);
+          
+          const response = await fetch(s.url);
+          const blob = await response.blob();
+
+          log(`Uploading ${s.title}...`);
+          const formData = new FormData();
+          formData.append('title', s.title);
+          formData.append('category', s.category);
+          formData.append('downloads', s.downloads);
+          formData.append('featured', s.featured ? 'true' : 'false');
+          formData.append('image', blob, `image_${i}.jpg`);
+
+          const rec = await mb.request('/api/collections/wallpapers/records', {
+            method: 'POST',
+            body: formData
+          });
+          log(`✅ Inserted: ${s.title}`);
+        }
+        log('🎉 Seeding Complete! You can close this tab and refresh the main app.');
+      } catch (err) {
+        log(`❌ Error: ${err.message}`);
+      }
+    });
+  </script>
+</body>
+</html>
