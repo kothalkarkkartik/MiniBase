@@ -358,45 +358,103 @@ async function checkTunnelStatus() {
   try {
     const res = await fetch('/api/tunnel').then(r => r.json()).catch(() => ({ active: false }));
     _tunnelState = res || { active: false, url: null };
-    const btn = document.getElementById('public-tunnel-btn');
-    if (btn) {
-      if (_tunnelState.active && _tunnelState.url) {
-        btn.style.display = 'inline-flex';
-        btn.title = 'Tunnel Active: ' + _tunnelState.url;
-      } else {
-        btn.style.display = 'none';
-      }
-    }
+    updateTunnelBtnUI();
   } catch {}
 }
 
-function openTunnelModal() {
-  const origin = (_tunnelState.active && _tunnelState.url) ? _tunnelState.url : window.location.origin;
-  const isTunnel = Boolean(_tunnelState.active && _tunnelState.url);
+function updateTunnelBtnUI() {
+  const btn = document.getElementById('public-tunnel-btn');
+  if (!btn) return;
+  if (_tunnelState.active && _tunnelState.url) {
+    btn.style.background = 'rgba(16,185,129,0.15)';
+    btn.style.borderColor = 'rgba(16,185,129,0.4)';
+    btn.style.color = '#10B981';
+    btn.innerHTML = `<span style="width:7px; height:7px; border-radius:50%; background:#10B981; box-shadow:0 0 8px #10B981;"></span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg> LIVE Tunnel</span>`;
+  } else {
+    btn.style.background = 'rgba(255,255,255,0.05)';
+    btn.style.borderColor = 'rgba(255,255,255,0.1)';
+    btn.style.color = 'var(--text-muted)';
+    btn.innerHTML = `<span style="width:7px; height:7px; border-radius:50%; background:var(--text-dim);"></span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg> Go Public (Internet)</span>`;
+  }
+}
+
+async function openTunnelModal() {
+  await checkTunnelStatus();
 
   const bodyHtml = `
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      <div style="padding:14px; background:var(--bg-surface-elevated); border:1px solid var(--border-default); border-radius:var(--radius-sm);">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-          <span style="width:8px; height:8px; border-radius:50%; background:${isTunnel ? 'var(--brand-primary)' : 'var(--accent-cyan)'}; box-shadow:0 0 8px ${isTunnel ? 'var(--brand-primary)' : 'var(--accent-cyan)'};"></span>
-          <strong style="font-size:13px; color:var(--text-main); font-family:var(--font-display);">${isTunnel ? 'Cloudflare Public Edge Active' : 'Localhost Active'}</strong>
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div style="padding:14px 16px; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.22); font-size:12.5px; line-height:1.5; color:#E2E8F0;">
+        <div style="font-weight:700; color:#38BDF8; margin-bottom:4px; font-size:13.5px; display:flex; align-items:center; gap:6px;">
+          <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg> Global Remote Access</span>
         </div>
-        <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">
-          ${isTunnel ? 'Your MiniBase backend is accessible worldwide on this live URL. Use this URL in Flutter, Mobile apps, or external frontends.' : 'MiniBase is currently running on localhost. To connect from other networks or Android physical devices, run with <code>--tunnel</code>.'}
+        <div>Turn on <strong>Instant Public Tunnel</strong> to get a secure HTTPS link. Use it in your Flutter mobile app, share it with friends, or access your database from anywhere on 4G/5G mobile data!</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px; padding:16px; border-radius:8px; background:#0E1015; border:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-weight:700; font-size:13px; color:#FFFFFF;">Public Cloudflare Tunnel</div>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Status: <strong style="color:${_tunnelState.active ? '#10B981' : 'var(--text-dim)'};">${_tunnelState.active ? 'ONLINE & LIVE' : 'OFFLINE (Local Only)'}</strong></div>
+          </div>
+          <button id="toggle-tunnel-btn" class="btn ${_tunnelState.active ? 'btn-danger' : 'btn-primary'}" onclick="toggleTunnelAction()" style="font-weight:700; padding:6px 14px; font-size:12px;">
+            ${_tunnelState.active ? 'Stop Public Link' : 'Turn ON Public Link'}
+          </button>
         </div>
-        <div style="margin-top:12px; display:flex; align-items:center; gap:8px;">
-          <input type="text" id="tunnel-url-copy-input" class="input mono" style="flex:1; font-size:12px; padding:6px 10px;" value="${origin}" readonly />
-          <button class="btn btn-secondary" onclick="copyToClipboard('${origin}')">Copy Link</button>
-        </div>
+
+        ${_tunnelState.active && _tunnelState.url ? `
+          <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+            <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Your Public MiniBase URL</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" class="input mono" readonly value="${_tunnelState.url}" style="font-size:12px; flex:1; color:#38BDF8; font-weight:600;" />
+              <button class="btn btn-secondary" onclick="copyToClipboard('${_tunnelState.url}')" style="font-size:12px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy</button>
+              <a href="${_tunnelState.url}/_/" target="_blank" class="btn btn-primary" style="font-size:12px;">Open ↗</a>
+            </div>
+            <div style="font-size:11.5px; color:#10B981; margin-top:2px;">
+              ✓ Anyone on the internet or your Flutter app can connect to this URL.
+            </div>
+          </div>
+        ` : `
+          <div style="font-size:12px; color:var(--text-dim); margin-top:8px;">
+            Currently only available at <code>http://localhost:8090</code>. Click above to make it public.
+          </div>
+        `}
       </div>
     </div>
   `;
 
   const footerHtml = `
-    <button class="btn btn-primary" onclick="closeModal()">Done</button>
+    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
   `;
 
-  openModal('Network & Edge Connection', bodyHtml, footerHtml);
+  openModal('Public Remote Link (Cloudflare Tunnel)', bodyHtml, footerHtml);
+}
+
+async function toggleTunnelAction() {
+  const btn = document.getElementById('toggle-tunnel-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+  }
+
+  try {
+    if (_tunnelState.active) {
+      showToast('Stopping tunnel...', 'info');
+      await window.api.stopTunnel();
+      showToast('Tunnel stopped', 'info');
+    } else {
+      showToast('Starting secure Cloudflare tunnel...', 'info');
+      await window.api.startTunnel();
+      showToast('Public tunnel is LIVE!', 'success');
+    }
+    await checkTunnelStatus();
+    openTunnelModal();
+  } catch (err) {
+    showToast(err.message, 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = _tunnelState.active ? 'Stop Public Link' : 'Turn ON Public Link';
+    }
+  }
 }
 
 // Global escape listener to close modals & drawers
@@ -1306,12 +1364,11 @@ function renderAppLayout() {
     <!-- Main View -->
     <main class="main-view">
       <div class="topbar">
-        <div class="topbar-left">
+        <div class="topbar-left" style="display:flex; align-items:center; gap:12px;">
           <div id="topbar-title-section" class="topbar-title">Dashboard</div>
-          <button id="public-tunnel-btn" class="tunnel-status-pill" onclick="openTunnelModal()" title="Network Connection" style="display:inline-flex;">
-            <span class="tunnel-pulse"></span>
-            <span id="public-tunnel-label" class="tunnel-label">Live Tunnel</span>
-            <svg class="tunnel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          <button id="public-tunnel-btn" class="btn btn-sm" onclick="openTunnelModal()" style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; padding:4px 10px; border-radius:12px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); color:#38BDF8; font-weight:600;">
+            <span style="width:7px; height:7px; border-radius:50%; background:#38BDF8; box-shadow:0 0 8px #38BDF8;"></span>
+            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Public Link</span>
           </button>
         </div>
         <div class="topbar-right" id="topbar-actions">
