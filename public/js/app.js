@@ -2252,16 +2252,18 @@ function renderRecordsTable() {
 }
 
 function formatCellValue(val, field, rec, col) {
-  if (val === null || val === undefined || val === '') return '<span style="color:var(--text-muted); font-size:11px;">NULL</span>';
+  if (val === null || val === undefined || val === '') return '<span style="color:var(--text-dim); font-size:11px; font-family:var(--font-mono);">NULL</span>';
 
   if (field.type === 'bool' || field.name === 'published') {
     const isTrue = Boolean(val === true || val === 1 || val === 'true' || val === '1');
     if (field.name === 'published') {
       return isTrue
-        ? '<span style="display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; background:rgba(16, 185, 129, 0.12); color:#10B981; border:1px solid rgba(16, 185, 129, 0.25);"><span style="width:5px; height:5px; border-radius:50%; background:#10B981;"></span>Published</span>'
-        : '<span style="display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; background:rgba(245, 158, 11, 0.12); color:#F59E0B; border:1px solid rgba(245, 158, 11, 0.25);"><span style="width:5px; height:5px; border-radius:50%; background:#F59E0B;"></span>Draft</span>';
+        ? '<span style="display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; background:rgba(16, 185, 129, 0.12); color:#10B981; border:1px solid rgba(16, 185, 129, 0.25);">Published</span>'
+        : '<span style="display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; background:rgba(245, 158, 11, 0.12); color:#F59E0B; border:1px solid rgba(245, 158, 11, 0.25);">Draft</span>';
     }
-    return isTrue ? '<span class="cell-bool-true">S true</span>' : '<span class="cell-bool-false">S" false</span>';
+    return isTrue
+      ? '<span class="cell-bool-true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle; margin-right:3px;"><polyline points="20 6 9 17 4 12"></polyline></svg>true</span>'
+      : '<span class="cell-bool-false"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle; margin-right:3px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>false</span>';
   }
 
   if (field.name === 'category') {
@@ -2273,6 +2275,8 @@ function formatCellValue(val, field, rec, col) {
       Design: { bg: 'rgba(168, 85, 247, 0.12)', text: '#C084FC', border: 'rgba(168, 85, 247, 0.25)' },
       Tutorial: { bg: 'rgba(16, 185, 129, 0.12)', text: '#34D399', border: 'rgba(16, 185, 129, 0.25)' },
       Product: { bg: 'rgba(236, 72, 153, 0.12)', text: '#F472B6', border: 'rgba(236, 72, 153, 0.25)' },
+      Nature: { bg: 'rgba(16, 185, 129, 0.12)', text: '#34D399', border: 'rgba(16, 185, 129, 0.25)' },
+      Abstract: { bg: 'rgba(168, 85, 247, 0.12)', text: '#C084FC', border: 'rgba(168, 85, 247, 0.25)' },
     };
     const c = catColors[cat] || { bg: 'rgba(255, 255, 255, 0.08)', text: '#E2E8F0', border: 'rgba(255, 255, 255, 0.14)' };
     return `<span style="display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:600; background:${c.bg}; color:${c.text}; border:1px solid ${c.border};">${escapeHtml(cat)}</span>`;
@@ -2293,12 +2297,8 @@ function formatCellValue(val, field, rec, col) {
     const num = Number(val);
     if (!isNaN(num) && num >= 1000) {
       const formatted = (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-      if (field.name === 'views') return `<span style="font-size:12px; color:var(--text-secondary); font-weight:500;">x️ ${formatted}</span>`;
-      if (field.name === 'likes') return `<span style="font-size:12px; color:#F472B6; font-weight:500;"> ${formatted}</span>`;
       return `<span class="mono" style="font-weight:500;">${formatted}</span>`;
     }
-    if (field.name === 'views') return `<span style="font-size:12px; color:var(--text-secondary);">x️ ${val}</span>`;
-    if (field.name === 'likes') return `<span style="font-size:12px; color:#F472B6;"> ${val}</span>`;
     return `<span class="mono">${val}</span>`;
   }
 
@@ -2307,17 +2307,17 @@ function formatCellValue(val, field, rec, col) {
     const isImg = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(val);
     if (isImg) {
       return `
-        <a href="${fileUrl}" target="_blank" style="display:inline-flex; align-items:center; gap:6px;">
+        <a href="${fileUrl}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; color:var(--text-main); text-decoration:none;">
           <img src="${fileUrl}" style="width:22px; height:22px; border-radius:4px; object-fit:cover; border:1px solid var(--border-subtle);" />
-          <span style="font-size:12px;">${escapeHtml(val)}</span>
+          <span style="font-size:12px; color:#38BDF8;">${escapeHtml(val)}</span>
         </a>
       `;
     }
-    return `<a href="${fileUrl}" target="_blank" class="cell-badge">x} ${escapeHtml(val)}</a>`;
+    return `<a href="${fileUrl}" target="_blank" class="cell-badge" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> ${escapeHtml(val)}</a>`;
   }
 
   if (field.type === 'relation') {
-    return `<span class="cell-badge mono" style="background:rgba(56, 189, 248, 0.1); color:var(--accent-cyan);">~ ${escapeHtml(String(val))}</span>`;
+    return `<span class="cell-badge mono" style="background:rgba(56, 189, 248, 0.1); color:var(--accent-cyan); display:inline-flex; align-items:center; gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> ${escapeHtml(String(val))}</span>`;
   }
 
   const str = String(val);
