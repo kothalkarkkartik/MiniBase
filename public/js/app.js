@@ -1163,8 +1163,11 @@ function renderForgotPasswordView() {
 
 // 3. Main App Layout
 function renderAppLayout() {
-  document.getElementById('app').innerHTML = `
-    <!-- Sidebar -->
+  const app = document.getElementById('app');
+  if (!app) return;
+
+  app.innerHTML = `
+    <!-- DevTools Studio Sidebar -->
     <aside class="sidebar">
       <div class="brand-header">
         <div class="brand-logo">
@@ -1172,40 +1175,62 @@ function renderAppLayout() {
         </div>
         <div class="status-badge">
           <span class="pulse-dot"></span>
-          <span>Online</span>
+          <span>v1.0</span>
+        </div>
+      </div>
+
+      <!-- Quick Table Filter -->
+      <div class="sidebar-search-box">
+        <div style="position:relative; display:flex; align-items:center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:8px; color:var(--text-dim); pointer-events:none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="sidebar-table-filter" class="sidebar-search-input" placeholder="Filter tables..." oninput="handleSidebarFilter(this.value)" />
         </div>
       </div>
 
       <div class="sidebar-scroll">
         <div class="sidebar-section-title">
-          <span>Your Tables</span>
-          <button class="btn-icon" style="width:20px; height:20px;" onclick="openCollectionModal()" title="Add New Table">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Collections</span>
+          <button class="btn-icon" onclick="openCollectionModal()" title="New Collection" style="width:20px; height:20px; color:var(--brand-primary);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           </button>
         </div>
-        <div id="sidebar-collections-list">
-          <div style="padding:10px; color:var(--text-muted); font-size:12px;">Loading...</div>
+
+        <div id="sidebar-collections-list" style="display:flex; flex-direction:column; gap:1px;">
+          <!-- Collections dynamic list -->
         </div>
 
-        <div class="sidebar-section-title" style="margin-top:16px;">
-          <span>Tools</span>
+        <div class="sidebar-section-title" style="margin-top:12px;">
+          <span>System & Engine</span>
         </div>
-        <button class="sidebar-nav-btn ${state.view === 'realtime' ? 'active' : ''}" onclick="switchView('realtime')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
-          <span>Live Activity</span>
-          <span class="count-badge" id="realtime-counter">${state.realtimeEvents.length}</span>
+
+        <button class="sidebar-nav-btn ${state.view === 'admins' ? 'active' : ''}" onclick="openAdminsModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>_admins</span>
+          <span class="count-badge">system</span>
         </button>
+
+        <div class="sidebar-section-title" style="margin-top:12px;">
+          <span>Developer Tools</span>
+        </div>
+
         <button class="sidebar-nav-btn ${state.view === 'explorer' ? 'active' : ''}" onclick="switchView('explorer')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-          <span>API Tester</span>
+          <span>API & SDKs</span>
         </button>
+
+        <button class="sidebar-nav-btn ${state.view === 'realtime' ? 'active' : ''}" onclick="switchView('realtime')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <span>Live Stream</span>
+        </button>
+
         <button class="sidebar-nav-btn ${state.view === 'logs' ? 'active' : ''}" onclick="switchView('logs')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          <span>Activity Logs</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>Request Logs</span>
         </button>
+
         <button class="sidebar-nav-btn ${state.view === 'settings' ? 'active' : ''}" onclick="switchView('settings')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          <span>Settings</span>
+          <span>Project Settings</span>
         </button>
       </div>
 
@@ -1218,7 +1243,7 @@ function renderAppLayout() {
           </div>
         </div>
         <button class="btn-icon" onclick="logoutAdmin()" title="Sign Out">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         </button>
       </div>
     </aside>
@@ -1226,11 +1251,11 @@ function renderAppLayout() {
     <!-- Main View -->
     <main class="main-view">
       <div class="topbar">
-        <div class="topbar-left" style="display:flex; align-items:center; gap:12px;">
+        <div class="topbar-left">
           <div id="topbar-title-section" class="topbar-title">Dashboard</div>
-          <button id="public-tunnel-btn" class="btn btn-sm" onclick="openTunnelModal()" style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; padding:4px 10px; border-radius:12px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); color:#38BDF8; font-weight:600;">
-            <span style="width:7px; height:7px; border-radius:50%; background:#38BDF8; box-shadow:0 0 8px #38BDF8;"></span>
-            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Public Link</span>
+          <button id="public-tunnel-btn" class="btn btn-sm" onclick="openTunnelModal()" style="display:inline-flex; align-items:center; gap:6px; font-size:11px; padding:3px 9px; border-radius:var(--radius-pill); background:var(--accent-cyan-soft); border:1px solid rgba(56,189,248,0.3); color:var(--accent-cyan); font-weight:600;">
+            <span style="width:6px; height:6px; border-radius:50%; background:var(--accent-cyan); box-shadow:0 0 6px var(--accent-cyan);"></span>
+            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:3px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Public Link</span>
           </button>
         </div>
         <div class="topbar-right" id="topbar-actions">
@@ -1239,11 +1264,21 @@ function renderAppLayout() {
       </div>
 
       <div class="content-area" id="content-view">
-        <!-- Main dynamic content will be rendered here -->
+        <!-- Main dynamic content -->
       </div>
     </main>
   `;
 }
+
+function handleSidebarFilter(query) {
+  const q = (query || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.sidebar-col-row');
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    r.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+  });
+}
+
 
 function logoutAdmin() {
   window.api.clearAuth();
@@ -1778,228 +1813,95 @@ final items = await mb.collection('${name}').getList();`;
 function updateApiModalSnippet() {
   const col = state.activeCollection;
   if (!col) return;
+  const origin = (_tunnelState.active && _tunnelState.url) ? _tunnelState.url : window.location.origin;
+  const codeBox = document.getElementById('api-snippet-code');
+  if (!codeBox) return;
 
-  const codeEl = document.getElementById('api-modal-code');
-  const code = generateApiCode(col, _apiTab, _apiAction);
-  window.__codeSnippets['api_preview'] = code;
+  const currentTab = window._activeApiTab || 'flutter';
 
-  if (codeEl) {
-    codeEl.textContent = code;
-  }
+  if (currentTab === 'flutter') {
+    codeBox.textContent = `// 📱 Flutter / Dart Integration
+import 'package:flutter/material.dart';
+import 'minibase.dart';
 
-  // Update active states on tabs
-  document.querySelectorAll('.api-lang-tab').forEach(t => {
-    if (t.dataset.tab === _apiTab) {
-      t.style.background = 'rgba(16,185,129,0.18)';
-      t.style.borderColor = '#10B981';
-      t.style.color = '#10B981';
-    } else {
-      t.style.background = 'rgba(255,255,255,0.03)';
-      t.style.borderColor = 'rgba(255,255,255,0.08)';
-      t.style.color = 'var(--text-secondary)';
-    }
+final mb = MiniBase('${origin}');
+
+// Fetch records from "${col.name}"
+Future<void> load${col.name[0].toUpperCase() + col.name.slice(1)}() async {
+  final res = await mb.collection('${col.name}').getList(
+    page: 1,
+    perPage: 30,
+    sort: '-created',
+  );
+  List<dynamic> items = res['items'];
+  print('Loaded ${items.length} records');
+}
+
+// Create new record
+Future<void> createRecord() async {
+  final record = await mb.collection('${col.name}').create({
+${(col.schema || []).map(f => `    '${f.name}': ${f.type === 'number' ? '0' : f.type === 'bool' ? 'true' : `'${f.name}_sample'`},`).join('\n')}
   });
+  print('Created ID: ${record['id']}');
+}`;
+  } else if (currentTab === 'js') {
+    codeBox.textContent = `// ⚡ JavaScript / TypeScript SDK
+import { MiniBaseClient } from './minibase-sdk.js';
 
-  document.querySelectorAll('.api-action-pill').forEach(p => {
-    if (p.dataset.action === _apiAction) {
-      p.style.background = '#10B981';
-      p.style.color = '#042F1A';
-      p.style.fontWeight = '700';
-    } else {
-      p.style.background = 'rgba(255,255,255,0.05)';
-      p.style.color = 'var(--text-muted)';
-      p.style.fontWeight = '500';
-    }
+const mb = new MiniBaseClient('${origin}');
+
+// Fetch all records
+const res = await mb.collection('${col.name}').getList({
+  page: 1,
+  perPage: 30,
+  sort: '-created'
+});
+console.log('Records:', res.items);
+
+// Realtime subscription
+mb.realtime.subscribe('${col.name}', (e) => {
+  console.log('Live Event:', e.action, e.record);
+});`;
+  } else if (currentTab === 'curl') {
+    codeBox.textContent = `# 🌐 cURL / REST API
+# 1. Fetch records list
+curl -X GET "${origin}/api/collections/${col.name}/records?page=1&perPage=30" \\
+     -H "Accept: application/json"
+
+# 2. Create new record
+curl -X POST "${origin}/api/collections/${col.name}/records" \\
+     -H "Content-Type: application/json" \\
+     -d '{${(col.schema || []).map(f => `"${f.name}": ${f.type === 'number' ? '0' : f.type === 'bool' ? 'true' : `"${f.name}_sample"`}`).join(', ')}}'`;
+  } else if (currentTab === 'python') {
+    codeBox.textContent = `# 🐍 Python Client
+import requests
+
+BASE_URL = "${origin}"
+
+# Fetch records
+res = requests.get(f"{BASE_URL}/api/collections/${col.name}/records")
+data = res.json()
+print("Records:", data.get("items", []))
+
+# Insert record
+payload = {
+${(col.schema || []).map(f => `    "${f.name}": ${f.type === 'number' ? '0' : f.type === 'bool' ? 'True' : `"${f.name}_sample"`},`).join('\n')}
+}
+post_res = requests.post(f"{BASE_URL}/api/collections/${col.name}/records", json=payload)
+print("Created:", post_res.json())`;
+  }
+
+  window.__codeSnippets['api_preview'] = codeBox.textContent;
+}
+
+window.selectApiTab = function(tabName) {
+  window._activeApiTab = tabName;
+  document.querySelectorAll('.api-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
-}
-
-// Public Tunnel State & Modal
-let _tunnelState = { active: false, url: null, loading: false };
-
-async function checkTunnelStatus() {
-  try {
-    const res = await window.api.getTunnelStatus();
-    _tunnelState = { active: res.active, url: res.url, loading: false };
-    updateTunnelBtnUI();
-  } catch {}
-}
-
-function updateTunnelBtnUI() {
-  const btn = document.getElementById('public-tunnel-btn');
-  if (!btn) return;
-  if (_tunnelState.active && _tunnelState.url) {
-    btn.style.background = 'rgba(16,185,129,0.15)';
-    btn.style.borderColor = 'rgba(16,185,129,0.4)';
-    btn.style.color = '#10B981';
-    btn.innerHTML = `<span style="width:7px; height:7px; border-radius:50%; background:#10B981; box-shadow:0 0 8px #10B981;"></span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Public Live: ${_tunnelState.url.replace(/^https?:\/\//, '').slice(0, 18)}...</span>`;
-  } else {
-    btn.style.background = 'rgba(255,255,255,0.05)';
-    btn.style.borderColor = 'rgba(255,255,255,0.12)';
-    btn.style.color = 'var(--text-muted)';
-    btn.innerHTML = `<span style="width:7px; height:7px; border-radius:50%; background:var(--text-dim);"></span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Go Public (Internet)</span>`;
-  }
-}
-
-async function openTunnelModal() {
-  await checkTunnelStatus();
-
-  const bodyHtml = `
-    <div style="display:flex; flex-direction:column; gap:16px;">
-      <div style="padding:14px 16px; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.22); font-size:12.5px; line-height:1.5; color:#E2E8F0;">
-        <div style="font-weight:700; color:#38BDF8; margin-bottom:4px; font-size:13.5px; display:flex; align-items:center; gap:6px;">
-          <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Global Remote Access</span>
-        </div>
-        <div>Turn on <strong>Instant Public Tunnel</strong> to get a secure HTTPS link. Use it in your Flutter mobile app, share it with friends, or access your database from anywhere on 4G/5G mobile data!</div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:8px; padding:16px; border-radius:8px; background:#0E1015; border:1px solid rgba(255,255,255,0.08);">
-        <div style="display:flex; align-items:center; justify-content:space-between;">
-          <div>
-            <div style="font-weight:700; font-size:13px; color:#FFFFFF;">Public Cloudflare Tunnel</div>
-            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Status: <strong style="color:${_tunnelState.active ? '#10B981' : 'var(--text-dim)'};">${_tunnelState.active ? 'ONLINE & LIVE' : 'OFFLINE (Local Only)'}</strong></div>
-          </div>
-          <button id="toggle-tunnel-btn" class="btn ${_tunnelState.active ? 'btn-danger' : 'btn-primary'}" onclick="toggleTunnelAction()" style="font-weight:700; padding:6px 14px; font-size:12px;">
-            ${_tunnelState.active ? 'Stop Public Link' : 'Turn ON Public Link'}
-          </button>
-        </div>
-
-        ${_tunnelState.active && _tunnelState.url ? `
-          <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
-            <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Your Public MiniBase URL</label>
-            <div style="display:flex; gap:6px;">
-              <input type="text" class="input mono" readonly value="${_tunnelState.url}" style="font-size:12px; flex:1; color:#38BDF8; font-weight:600;" />
-              <button class="btn btn-secondary" onclick="copyToClipboard('${_tunnelState.url}')" style="font-size:12px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy</button>
-              <a href="${_tunnelState.url}/_/" target="_blank" class="btn btn-primary" style="font-size:12px;">Open ↗</a>
-            </div>
-
-            <div style="margin-top:8px;">
-              <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Paste in Flutter (minibase.dart)</label>
-              <pre style="margin-top:4px; padding:10px; border-radius:6px; background:#080A0E; border:1px solid rgba(255,255,255,0.08); font-size:12px; font-family:var(--font-mono); color:#10B981;">final mb = MiniBase('${_tunnelState.url}');</pre>
-            </div>
-          </div>
-        ` : ''}
-      </div>
-    </div>
-  `;
-
-  const footerHtml = `
-    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-  `;
-
-  openModal('Public Cloud Tunnel', bodyHtml, footerHtml);
-}
-
-async function toggleTunnelAction() {
-  const btn = document.getElementById('toggle-tunnel-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Connecting...';
-  }
-
-  try {
-    if (_tunnelState.active) {
-      await window.api.stopTunnel();
-      showToast('Public tunnel stopped', 'info');
-    } else {
-      showToast('Starting secure Cloudflare tunnel...', 'info');
-      await window.api.startTunnel();
-      showToast('Public tunnel is LIVE!', 'success');
-    }
-    await checkTunnelStatus();
-    openTunnelModal();
-  } catch (err) {
-    showToast(err.message, 'error');
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = _tunnelState.active ? 'Stop Public Link' : 'Turn ON Public Link';
-    }
-  }
-}
-
-function openApiQuickstartModal() {
-  const col = state.activeCollection;
-  if (!col) return;
-
-  _apiTab = 'html';
-  _apiAction = 'list';
-
-  const isAuth = col.type === 'auth';
-
-  const bodyHtml = `
-    <div style="display:flex; flex-direction:column; gap:16px;">
-      
-      <!-- Top Guide Banner -->
-      <div style="padding:12px 16px; border-radius:8px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.22); font-size:12.5px; line-height:1.5; color:#E2E8F0;">
-        <div style="font-weight:700; color:#10B981; margin-bottom:3px; display:flex; align-items:center; gap:6px;">
-          <span>Client SDKs & Integration Guide:</span>
-        </div>
-        <div>1. Set <strong>API Rules</strong> in <em>Edit Columns</em> to <strong>Everyone (Public)</strong> if you want your frontend to access it without login.</div>
-        <div>2. Select your language below, click <strong>Copy Code</strong>, and paste it into your project!</div>
-        <div style="margin-top:6px; display:flex; gap:8px; align-items:center;">
-          <a href="/minibase.dart" download class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px; color:#10B981; border-color:rgba(16,185,129,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download minibase.dart (Flutter SDK)</a>
-          <a href="/js/minibase-sdk.js" download class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px; color:#38BDF8; border-color:rgba(56,189,248,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download minibase-sdk.js (Web SDK)</a>
-        </div>
-      </div>
-
-      <!-- Language Selector Tabs -->
-      <div>
-        <label style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); margin-bottom:6px; display:block;">Select Your Language / Framework</label>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="api-lang-tab btn" data-tab="html" onclick="setApiModalTab('html')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            JavaScript / HTML
-          </button>
-          <button class="api-lang-tab btn" data-tab="react" onclick="setApiModalTab('react')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            React / Next.js
-          </button>
-          <button class="api-lang-tab btn" data-tab="fetch" onclick="setApiModalTab('fetch')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            Direct REST API
-          </button>
-          <button class="api-lang-tab btn" data-tab="flutter" onclick="setApiModalTab('flutter')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            Flutter / Dart
-          </button>
-          <button class="api-lang-tab btn" data-tab="curl" onclick="setApiModalTab('curl')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            cURL (Terminal)
-          </button>
-        </div>
-      </div>
-
-      <!-- Action Selector Pills -->
-      <div>
-        <label style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); margin-bottom:6px; display:block;">Action</label>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="api-action-pill btn" data-action="list" onclick="setApiModalAction('list')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> List Records</button>
-          <button class="api-action-pill btn" data-action="view" onclick="setApiModalAction('view')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> View One</button>
-          <button class="api-action-pill btn" data-action="create" onclick="setApiModalAction('create')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">Create Record</button>
-          <button class="api-action-pill btn" data-action="update" onclick="setApiModalAction('update')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Update</button>
-          <button class="api-action-pill btn" data-action="delete" onclick="setApiModalAction('delete')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</button>
-          <button class="api-action-pill btn" data-action="realtime" onclick="setApiModalAction('realtime')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">Realtime Stream</button>
-          ${isAuth ? '<button class="api-action-pill btn" data-action="auth" onclick="setApiModalAction(\'auth\')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> User Auth</button>' : ''}
-        </div>
-      </div>
-
-      <!-- Code Snippet Box -->
-      <div style="position:relative;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span style="font-size:11px; color:var(--text-muted);">Ready to Copy & Paste:</span>
-          <button id="copy-api-btn" class="btn btn-sm btn-primary" style="padding:4px 12px; font-size:11px; display:flex; align-items:center; gap:5px;" onclick="copyApiSnippetAction()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>Copy Code</span>
-          </button>
-        </div>
-        <pre class="code-block" style="max-height:240px; overflow:auto; margin:0; padding:12px; font-size:12px; line-height:1.5; border-radius:6px; background:#080A0E; border:1px solid rgba(255,255,255,0.08);"><code id="api-modal-code"></code></pre>
-      </div>
-
-    </div>
-  `;
-
-  const footerHtml = `
-    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-    <button class="btn btn-primary" onclick="copyApiSnippetAction()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy Code & Done</button>
-  `;
-
-  openModal(`API & App Integration: "${escapeHtml(col.name)}"`, bodyHtml, footerHtml);
   updateApiModalSnippet();
-}
+};
+
 
 function copyApiSnippetAction() {
   const code = window.__codeSnippets['api_preview'] || '';
@@ -2145,7 +2047,7 @@ function renderRecordsTable() {
       <div class="collection-header-card" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#12141A; border:1px solid rgba(255,255,255,0.08); border-radius:8px;">
         <div style="display:flex; align-items:center; gap:12px;">
           <div style="width:34px; height:34px; border-radius:6px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.25); display:flex; align-items:center; justify-content:center; color:#10B981; font-size:16px;">
-            ${col.type === 'auth' ? '👤' : '📋'}
+            ${col.type === 'auth' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>'}
           </div>
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
