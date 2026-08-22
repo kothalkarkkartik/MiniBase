@@ -1943,6 +1943,18 @@ function copyConnectCode() {
 }
 
 // =========================================================
+
+// Expose global window helpers
+window.openConnectAppModal = openConnectAppModal;
+window.openApiQuickstartModal = openConnectAppModal;
+window.switchConnectTab = switchConnectTab;
+window.copyConnectCode = copyConnectCode;
+window.openImportModal = openImportModal;
+window.toggleVisualFilter = toggleVisualFilter;
+window.startInlineEdit = startInlineEdit;
+window.downloadDatabaseBackup = downloadDatabaseBackup;
+window.triggerBackupRestore = triggerBackupRestore;
+
 // POWER FEATURE 5: 1-Click Backup Export & Restore
 // =========================================================
 async function downloadDatabaseBackup() {
@@ -2901,7 +2913,7 @@ function renderRecordsTable() {
         </div>
 
         <div style="display:flex; align-items:center; gap:8px;">
-          <button class="btn btn-secondary" onclick="openApiQuickstartModal()" title="Get code to connect your app">
+          <button class="btn btn-secondary" onclick="openConnectAppModal()" style="color:var(--brand-primary); border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.06); font-weight:600;" title="Get code to connect your app">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
             <span>Connect App</span>
           </button>
