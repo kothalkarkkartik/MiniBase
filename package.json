@@ -12,7 +12,7 @@
     "dev": "node --watch src/index.js",
     "test": "node tests/api.test.js",
     "build:exe": "caxa --input . --output minibase.exe --exclude minibase_data minibase_test_data .git examples tmp_seed -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/bin/minibase.js\" serve --open",
-    "build:app": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe /target:winexe /out:MiniBase-Studio.exe /r:System.dll,System.Windows.Forms.dll,System.Drawing.dll src\\desktop\\Program.cs",
+    "build:app": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe /target:winexe /win32icon:app.ico /out:MiniBase-Studio.exe /r:System.dll,System.Windows.Forms.dll,System.Drawing.dll src\\desktop\\Program.cs",
     "build:linux": "caxa --input . --output minibase-linux --exclude minibase_data minibase_test_data .git examples tmp_seed -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/bin/minibase.js\" serve"
   },
   "keywords": [
