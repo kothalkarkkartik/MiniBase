@@ -41,3 +41,8 @@ Thumbs.db
 **/android/local.properties
 **/ios/Pods/
 **/ios/.symlinks/
+
+# Standalone Executables
+minibase.exe
+minibase-linux
+dist/
