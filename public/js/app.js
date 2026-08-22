@@ -375,29 +375,40 @@ function openTunnelModal() {
   const isTunnel = Boolean(_tunnelState.active && _tunnelState.url);
 
   const bodyHtml = `
-    <div style="display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; flex-direction:column; gap:14px;">
       <div style="padding:14px; background:var(--bg-surface-elevated); border:1px solid var(--border-default); border-radius:var(--radius-sm);">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-          <span style="width:8px; height:8px; border-radius:50%; background:${isTunnel ? 'var(--brand-primary)' : 'var(--text-dim)'}; box-shadow:${isTunnel ? '0 0 8px var(--brand-primary)' : 'none'};"></span>
-          <strong style="font-size:13px; color:var(--text-main);">${isTunnel ? 'Public Cloudflare Tunnel Active' : 'Localhost Only'}</strong>
+          <span style="width:8px; height:8px; border-radius:50%; background:${isTunnel ? 'var(--brand-primary)' : 'var(--accent-cyan)'}; box-shadow:0 0 8px ${isTunnel ? 'var(--brand-primary)' : 'var(--accent-cyan)'};"></span>
+          <strong style="font-size:13px; color:var(--text-main); font-family:var(--font-display);">${isTunnel ? 'Cloudflare Public Edge Active' : 'Localhost Active'}</strong>
         </div>
         <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">
-          ${isTunnel ? 'Your MiniBase backend is accessible worldwide on this live URL. Use this link in your Flutter or mobile apps.' : 'MiniBase is currently running only on your local network.'}
+          ${isTunnel ? 'Your MiniBase backend is accessible worldwide on this live URL. Use this URL in Flutter, Mobile apps, or external frontends.' : 'MiniBase is currently running on localhost. To connect from other networks or Android physical devices, run with <code>--tunnel</code>.'}
         </div>
         <div style="margin-top:12px; display:flex; align-items:center; gap:8px;">
-          <input type="text" class="input mono" style="flex:1; font-size:12px;" value="${origin}" readonly />
+          <input type="text" id="tunnel-url-copy-input" class="input mono" style="flex:1; font-size:12px; padding:6px 10px;" value="${origin}" readonly />
           <button class="btn btn-secondary" onclick="copyToClipboard('${origin}')">Copy Link</button>
         </div>
       </div>
     </div>
   `;
 
-  openModal('Public Tunnel Status', bodyHtml, '<button class="btn btn-secondary" onclick="closeModal()">Close</button>');
+  const footerHtml = `
+    <button class="btn btn-primary" onclick="closeModal()">Done</button>
+  `;
+
+  openModal('Network & Edge Connection', bodyHtml, footerHtml);
 }
+
+// Global escape listener to close modals & drawers
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeDrawer();
+  }
+});
 
 // App Initialization
 async function initApp() {
-  checkTunnelStatus();
   const hash = window.location.hash || '';
 
   if (hash.startsWith('#/confirm-password-reset')) {
@@ -427,6 +438,7 @@ async function initApp() {
   }
 
   renderAppLayout();
+  checkTunnelStatus();
   await loadCollections();
   initRealtimeFeed();
 }
@@ -1296,9 +1308,9 @@ function renderAppLayout() {
       <div class="topbar">
         <div class="topbar-left">
           <div id="topbar-title-section" class="topbar-title">Dashboard</div>
-          <button id="public-tunnel-btn" class="tunnel-status-pill" onclick="openTunnelModal()" title="Cloudflare Live Tunnel Active" style="display:none;">
+          <button id="public-tunnel-btn" class="tunnel-status-pill" onclick="openTunnelModal()" title="Network Connection" style="display:inline-flex;">
             <span class="tunnel-pulse"></span>
-            <span class="tunnel-label">Live Tunnel</span>
+            <span id="public-tunnel-label" class="tunnel-label">Live Tunnel</span>
             <svg class="tunnel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
           </button>
         </div>
