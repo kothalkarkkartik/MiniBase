@@ -76,16 +76,33 @@ if (!fs.existsSync(storageDir)) {
   fs.mkdirSync(storageDir, { recursive: true });
 }
 
+import crypto from 'node:crypto';
+
+function getOrGenerateJwtSecret(customSecret, dir) {
+  if (customSecret) return customSecret;
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+
+  const secretFile = path.join(dir, '_jwt_secret.key');
+  try {
+    if (fs.existsSync(secretFile)) {
+      const stored = fs.readFileSync(secretFile, 'utf8').trim();
+      if (stored.length >= 32) return stored;
+    }
+    const newSecret = crypto.randomBytes(64).toString('hex');
+    fs.writeFileSync(secretFile, newSecret, { mode: 0o600 });
+    return newSecret;
+  } catch {
+    return 'minibase-secure-key-' + Date.now();
+  }
+}
+
 export const config = {
   port: parseInt(parsedArgs.port || process.env.PORT || '8090', 10),
   host: parsedArgs.host || process.env.HOST || '0.0.0.0',
   dataDir,
   dbPath: path.join(dataDir, 'data.db'),
   storageDir,
-  jwtSecret:
-    parsedArgs['jwt-secret'] ||
-    process.env.JWT_SECRET ||
-    'minibase-default-secure-jwt-key-2026-minibase-secret',
+  jwtSecret: getOrGenerateJwtSecret(parsedArgs['jwt-secret'], dataDir),
   jwtExpiry: process.env.JWT_EXPIRY || '7d',
   isDev: Boolean(parsedArgs.dev || process.env.NODE_ENV === 'development'),
   appName: process.env.APP_NAME || 'MiniBase',

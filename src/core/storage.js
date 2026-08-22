@@ -48,8 +48,14 @@ export class StorageManager {
 
   static getFilePath(collectionId, recordId, filename) {
     // Prevent path traversal
+    const safeCol = String(collectionId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeRec = String(recordId || '').replace(/[^a-zA-Z0-9_-]/g, '');
     const safeFilename = path.basename(filename);
-    const filePath = path.join(config.storageDir, collectionId, recordId, safeFilename);
+
+    if (!safeCol || !safeRec || !safeFilename) return null;
+
+    const filePath = path.resolve(config.storageDir, safeCol, safeRec, safeFilename);
+    if (!filePath.startsWith(path.resolve(config.storageDir))) return null;
 
     if (fs.existsSync(filePath)) {
       return filePath;
@@ -58,15 +64,28 @@ export class StorageManager {
   }
 
   static deleteRecordFiles(collectionId, recordId) {
-    const recordDir = path.join(config.storageDir, collectionId, recordId);
+    const safeCol = String(collectionId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeRec = String(recordId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    if (!safeCol || !safeRec) return;
+
+    const recordDir = path.resolve(config.storageDir, safeCol, safeRec);
+    if (!recordDir.startsWith(path.resolve(config.storageDir))) return;
+
     if (fs.existsSync(recordDir)) {
       fs.rmSync(recordDir, { recursive: true, force: true });
     }
   }
 
   static deleteFile(collectionId, recordId, filename) {
+    const safeCol = String(collectionId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeRec = String(recordId || '').replace(/[^a-zA-Z0-9_-]/g, '');
     const safeFilename = path.basename(filename);
-    const filePath = path.join(config.storageDir, collectionId, recordId, safeFilename);
+
+    if (!safeCol || !safeRec || !safeFilename) return false;
+
+    const filePath = path.resolve(config.storageDir, safeCol, safeRec, safeFilename);
+    if (!filePath.startsWith(path.resolve(config.storageDir))) return false;
+
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
       return true;
