@@ -37,23 +37,75 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(authMiddleware);
 app.use(AppLogger.middleware());
 
-// REST API Routers
-app.use('/api/admins', adminRouter);
-app.use('/api/collections', collectionsRouter);
-app.use('/api/collections', recordsRouter);
-app.use('/api/batch', batchRouter);
-app.use('/api/files', filesRouter);
-app.use('/api/realtime', realtimeRouter);
+// REST API Routers (Supports both /api/* and /minibase/api/*)
+const apiRoutes = [
+  ['/admins', adminRouter],
+  ['/collections', collectionsRouter],
+  ['/collections', recordsRouter],
+  ['/batch', batchRouter],
+  ['/files', filesRouter],
+  ['/realtime', realtimeRouter],
+];
+
+for (const [routePath, router] of apiRoutes) {
+  app.use(`/api${routePath}`, router);
+  app.use(`/minibase/api${routePath}`, router);
+}
+
+import { TunnelManager } from './core/tunnel.js';
 
 // Health check endpoint
-app.get('/api/health', (_req, res) => {
+const handleHealth = (_req, res) => {
   res.json({
     status: 'ok',
     version: '1.0.0',
     app: config.appName,
     timestamp: new Date().toISOString(),
   });
-});
+};
+app.get('/api/health', handleHealth);
+app.get('/minibase/api/health', handleHealth);
+
+// Public Tunnel Endpoints
+const handleGetTunnel = (_req, res) => {
+  res.json({
+    active: TunnelManager.isActive(),
+    url: TunnelManager.getUrl(),
+  });
+};
+
+const handleStartTunnel = async (_req, res) => {
+  try {
+    const url = await TunnelManager.start(config.port);
+    res.json({ active: true, url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const handleStopTunnel = async (_req, res) => {
+  try {
+    await TunnelManager.stop();
+    res.json({ active: false, url: null });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+app.get('/api/tunnel', handleGetTunnel);
+app.get('/minibase/api/tunnel', handleGetTunnel);
+app.post('/api/tunnel', handleStartTunnel);
+app.post('/minibase/api/tunnel', handleStartTunnel);
+app.delete('/api/tunnel', handleStopTunnel);
+app.delete('/minibase/api/tunnel', handleStopTunnel);
+
+// Wallpaper Demo App Static Assets
+const wallpaperAppDir = path.resolve('./examples/wallpaper-app');
+if (fs.existsSync(wallpaperAppDir)) {
+  app.use('/app', express.static(wallpaperAppDir));
+  app.use('/wallpapers', express.static(wallpaperAppDir));
+  app.use('/demo', express.static(wallpaperAppDir));
+}
 
 // Admin UI Static Assets
 const adminUiDir = path.resolve('./public');
@@ -65,9 +117,11 @@ if (!fs.existsSync(adminUiDir)) {
 app.use(express.static(adminUiDir));
 app.use('/_admin', express.static(adminUiDir));
 app.use('/_', express.static(adminUiDir));
+app.use('/minibase', express.static(adminUiDir));
+app.use('/minibase/_', express.static(adminUiDir));
 
 // Fallback for Admin UI SPA Routing
-app.get(['/', '/_/*', '/_'], (_req, res) => {
+app.get(['/', '/_/*', '/_', '/minibase', '/minibase/*', '/minibase/_/*'], (_req, res) => {
   const indexPath = path.join(adminUiDir, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
@@ -79,7 +133,7 @@ app.get(['/', '/_/*', '/_'], (_req, res) => {
       <body style="font-family:system-ui; background:#0B0F17; color:#E2E8F0; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;">
         <div style="text-align:center;">
           <h1 style="color:#10B981; margin-bottom:8px;">⚡ MiniBase Backend is Running</h1>
-          <p style="color:#94A3B8;">REST API available at <a href="/api/health" style="color:#38BDF8;">/api/health</a></p>
+          <p style="color:#94A3B8;">REST API available at <a href="/minibase/api/health" style="color:#38BDF8;">/minibase/api/health</a></p>
           <p style="color:#64748B; font-size:14px;">Admin dashboard is being built...</p>
         </div>
       </body>
@@ -151,9 +205,10 @@ if (process.env.NODE_ENV !== 'test') {
   ██║ ╚═╝ ██║██║██║ ╚████║██║██████╔╝██║  ██║███████║███████╗
   ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝
   \x1b[0m
-  \x1b[36m➜\x1b[0m \x1b[1mAdmin UI:\x1b[0m    \x1b[32mhttp://localhost:${config.port}/_/\x1b[0m
-  \x1b[36m➜\x1b[0m \x1b[1mREST API:\x1b[0m    \x1b[32mhttp://localhost:${config.port}/api/collections\x1b[0m
-  \x1b[36m➜\x1b[0m \x1b[1mRealtime:\x1b[0m    \x1b[32mhttp://localhost:${config.port}/api/realtime\x1b[0m
+  \x1b[36m➜\x1b[0m \x1b[1mAdmin UI:\x1b[0m    \x1b[32mhttp://localhost:${config.port}/minibase\x1b[0m (or /_/)
+  \x1b[36m➜\x1b[0m \x1b[1mREST API:\x1b[0m    \x1b[32mhttp://localhost:${config.port}/minibase/api/collections\x1b[0m
+  \x1b[36m➜\x1b[0m \x1b[1mRealtime:\x1b[0m    \x1b[32mhttp://localhost:${config.port}/minibase/api/realtime\x1b[0m
+  \x1b[36m➜\x1b[0m \x1b[1mFlutter SDK:\x1b[0m \x1b[32mhttp://localhost:${config.port}/minibase.dart\x1b[0m
   \x1b[36m➜\x1b[0m \x1b[1mData Path:\x1b[0m   \x1b[90m${config.dataDir}\x1b[0m
 `);
     });

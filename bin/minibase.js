@@ -110,3 +110,36 @@ if (args.includes('--open') || process.env.OPEN_BROWSER === 'true') {
     openBrowser(`http://localhost:${config.port}/_/`);
   }, 500);
 }
+
+if (args.includes('--tunnel') || args.includes('--public') || args.includes('--subdomain') || process.env.MINIBASE_TUNNEL === 'true') {
+  const { TunnelManager } = await import('../src/core/tunnel.js');
+
+  const getArgValue = (flag) => {
+    const idx = args.indexOf(flag);
+    return idx !== -1 && args[idx + 1] ? args[idx + 1] : null;
+  };
+
+  const subdomain = getArgValue('--subdomain') || process.env.MINIBASE_SUBDOMAIN;
+  const token = getArgValue('--token') || process.env.CLOUDFLARE_TUNNEL_TOKEN;
+  const domain = getArgValue('--domain') || process.env.MINIBASE_DOMAIN;
+
+  try {
+    const publicUrl = await TunnelManager.start(config.port, { subdomain, token, domain });
+    console.log(`
+  \x1b[38;2;16;185;129m┌──────────────────────────────────────────────────────────────────┐
+  │                                                                  │
+  │   🌍 MiniBase is LIVE Worldwide (${subdomain ? `Custom Subdomain: ${subdomain}` : 'Public Tunnel'})
+  │                                                                  │
+  │   📱 Mobile / Flutter API URL:                                   │
+  │   \x1b[1m\x1b[32m${publicUrl}\x1b[0m\x1b[38;2;16;185;129m
+  │                                                                  │
+  │   🖥️ Admin Studio (Anywhere in World):                           │
+  │   \x1b[36m${publicUrl}/_/\x1b[0m\x1b[38;2;16;185;129m
+  │                                                                  │
+  └──────────────────────────────────────────────────────────────────┘\x1b[0m
+`);
+  } catch (err) {
+    console.error('Failed to start public tunnel:', err.message);
+  }
+}
+

@@ -24,9 +24,13 @@
   "author": "MiniBase Team",
   "license": "MIT",
   "dependencies": {
+    "@ngrok/ngrok": "^1.7.0",
+    "cloudflared": "^0.7.3",
     "express": "^4.21.2",
+    "localtunnel": "^2.0.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^9.0.5",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "untun": "^0.2.2"
   }
 }

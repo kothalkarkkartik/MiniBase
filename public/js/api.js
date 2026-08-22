@@ -243,6 +243,19 @@ class AdminAPI {
       body: JSON.stringify({ email }),
     });
   }
+
+  // Public Tunnel
+  async getTunnelStatus() {
+    return this.request('/api/tunnel');
+  }
+
+  async startTunnel() {
+    return this.request('/api/tunnel', { method: 'POST' });
+  }
+
+  async stopTunnel() {
+    return this.request('/api/tunnel', { method: 'DELETE' });
+  }
 }
 
 window.api = new AdminAPI();

@@ -412,7 +412,12 @@ recordsRouter.get('/:name/records', (req, res) => {
     // User query filter
     const userFilter = (req.query.filter || '').trim();
     if (userFilter) {
-      const allowedFields = collection.schema.map(f => f.name);
+      const allowedFields = [
+        'id',
+        'created',
+        'updated',
+        ...collection.schema.map(f => f.name),
+      ];
       if (collection.type === 'auth') allowedFields.push('email', 'verified');
       const parsed = RuleEvaluator.parseFilter(userFilter, allowedFields);
       if (parsed.sql) {
@@ -421,18 +426,24 @@ recordsRouter.get('/:name/records', (req, res) => {
       }
     }
 
-    // Quick text search
+    // Quick text search (Includes Record ID by default)
     const search = (req.query.search || '').trim();
     if (search) {
-      const textFields = collection.schema
-        .filter(f => f.type === 'text' || f.type === 'email' || f.type === 'url')
-        .map(f => `"${f.name}" LIKE ?`);
+      const searchFields = ['"id" LIKE ?'];
 
-      if (collection.type === 'auth') textFields.push('"email" LIKE ?');
+      for (const f of collection.schema) {
+        if (['text', 'email', 'url', 'select', 'json'].includes(f.type)) {
+          searchFields.push(`"${f.name}" LIKE ?`);
+        }
+      }
 
-      if (textFields.length > 0) {
-        whereConditions.push(`(${textFields.join(' OR ')})`);
-        for (let i = 0; i < textFields.length; i++) {
+      if (collection.type === 'auth') {
+        searchFields.push('"email" LIKE ?');
+      }
+
+      if (searchFields.length > 0) {
+        whereConditions.push(`(${searchFields.join(' OR ')})`);
+        for (let i = 0; i < searchFields.length; i++) {
           queryParams.push(`%${search}%`);
         }
       }

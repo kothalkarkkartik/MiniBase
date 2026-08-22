@@ -28,3 +28,16 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Flutter & Mobile Builds
+*.apk
+*.aab
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/build/
+**/.dart_tool/
+**/android/.gradle/
+**/android/local.properties
+**/ios/Pods/
+**/ios/.symlinks/

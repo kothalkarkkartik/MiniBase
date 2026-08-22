@@ -146,7 +146,7 @@ function applyRulePreset(preset) {
 }
 
 async function downloadStarterApp(colName) {
-  const origin = window.location.origin;
+  const origin = (_tunnelState.active && _tunnelState.url) ? _tunnelState.url : window.location.origin;
   const col = (state.collections || []).find(c => c.name === colName) || { name: colName, schema: [] };
   const schemaJson = JSON.stringify(col.schema || []);
 
@@ -354,6 +354,7 @@ function closeDrawer() {
 
 // App Initialization
 async function initApp() {
+  checkTunnelStatus();
   const hash = window.location.hash || '';
 
   if (hash.startsWith('#/confirm-password-reset')) {
@@ -1225,8 +1226,12 @@ function renderAppLayout() {
     <!-- Main View -->
     <main class="main-view">
       <div class="topbar">
-        <div class="topbar-left">
+        <div class="topbar-left" style="display:flex; align-items:center; gap:12px;">
           <div id="topbar-title-section" class="topbar-title">Dashboard</div>
+          <button id="public-tunnel-btn" class="btn btn-sm" onclick="openTunnelModal()" style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; padding:4px 10px; border-radius:12px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); color:#38BDF8; font-weight:600;">
+            <span style="width:7px; height:7px; border-radius:50%; background:#38BDF8; box-shadow:0 0 8px #38BDF8;"></span>
+            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Public Link</span>
+          </button>
         </div>
         <div class="topbar-right" id="topbar-actions">
           <!-- Dynamic Topbar Actions -->
@@ -1386,20 +1391,20 @@ function renderTopBar() {
       </button>
     `;
   } else if (state.view === 'realtime') {
-    titleSection.innerHTML = `<span>⚡ Live Activity Feed</span>`;
+    titleSection.innerHTML = `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Live Activity Feed</span>`;
     actionsSection.innerHTML = `
       <button class="btn btn-secondary" onclick="state.realtimeEvents = []; renderRealtimeView();">Clear Events</button>
     `;
   } else if (state.view === 'explorer') {
-    titleSection.innerHTML = `<span>🚀 API Tester</span>`;
+    titleSection.innerHTML = `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> API Quickstart</span>`;
     actionsSection.innerHTML = '';
   } else if (state.view === 'logs') {
-    titleSection.innerHTML = `<span>📋 Activity Logs</span>`;
+    titleSection.innerHTML = `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> System Logs</span>`;
     actionsSection.innerHTML = `
       <button class="btn btn-danger" onclick="clearLogsAction()">Clear All Logs</button>
     `;
   } else if (state.view === 'settings') {
-    titleSection.innerHTML = `<span>⚙️ Settings</span>`;
+    titleSection.innerHTML = `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Project Settings</span>`;
     actionsSection.innerHTML = `
       <a href="/api/admins/backup" class="btn btn-primary" target="_blank">Download DB Backup</a>
     `;
@@ -1680,40 +1685,66 @@ events.addEventListener('delete', (e) => console.log('Deleted:', JSON.parse(e.da
 
   if (tab === 'flutter') {
     if (action === 'list') {
-      return `import 'dart:convert';
-import 'package:http/http.dart' as http;
+      return `// ⚡ Using MiniBase Flutter SDK (minibase.dart)
+import 'package:your_app/minibase.dart';
 
-Future<void> fetch${name.charAt(0).toUpperCase() + name.slice(1)}() async {
-  final url = Uri.parse('${origin}/api/collections/${name}/records?page=1&perPage=30');
-  final response = await http.get(url);
+final mb = MiniBase('${origin}');
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    print('Fetched items: \${data["items"]}');
-  } else {
-    print('Failed with status: \${response.statusCode}');
-  }
-}`;
+// Fetch ${name} records
+final res = await mb.collection('${name}').getList(
+  page: 1,
+  perPage: 30,
+  sort: '-created',
+);
+
+List<dynamic> items = res['items'];
+print('Fetched ${items.length} records: $items');`;
+    } else if (action === 'view') {
+      return `// ⚡ Fetch Single Record by ID in Flutter
+import 'package:your_app/minibase.dart';
+
+final mb = MiniBase('${origin}');
+final record = await mb.collection('${name}').getOne('RECORD_ID');
+print('Record details: $record');
+
+// If record contains an image/file:
+final fileUrl = mb.getFileUrl('${name}', record['id'], record['image'] ?? '');
+print('File URL: $fileUrl');`;
     } else if (action === 'create') {
-      return `import 'dart:convert';
-import 'package:http/http.dart' as http;
+      return `// ⚡ Create New Record in Flutter
+import 'package:your_app/minibase.dart';
 
-Future<void> createRecord() async {
-  final url = Uri.parse('${origin}/api/collections/${name}/records');
-  final response = await http.post(
-    url,
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode(${sampleJson}),
-  );
-  print('Response: \${response.body}');
-}`;
+final mb = MiniBase('${origin}');
+final newRecord = await mb.collection('${name}').create(${sampleJson});
+print('Created Record ID: ${newRecord["id"]}');`;
+    } else if (action === 'update') {
+      return `// ⚡ Update Record in Flutter
+import 'package:your_app/minibase.dart';
+
+final mb = MiniBase('${origin}');
+final updated = await mb.collection('${name}').update('RECORD_ID', ${sampleJson});
+print('Updated successfully: $updated');`;
+    } else if (action === 'delete') {
+      return `// ⚡ Delete Record in Flutter
+import 'package:your_app/minibase.dart';
+
+final mb = MiniBase('${origin}');
+final success = await mb.collection('${name}').delete('RECORD_ID');
+print('Deleted successfully: $success');`;
+    } else if (action === 'auth') {
+      return `// ⚡ User Auth with Password in Flutter
+import 'package:your_app/minibase.dart';
+
+final mb = MiniBase('${origin}');
+final authData = await mb.collection('${name}').authWithPassword('user@example.com', 'password123');
+print('Auth Token: ${authData["token"]}');
+print('User Profile: ${authData["record"]}');`;
     } else {
-      return `import 'dart:convert';
-import 'package:http/http.dart' as http;
+      return `// ⚡ MiniBase Flutter Client
+import 'package:your_app/minibase.dart';
 
-// Action: ${action}
-final url = Uri.parse('${origin}/api/collections/${name}/records${action === 'view' || action === 'update' || action === 'delete' ? '/RECORD_ID' : ''}');
-// Execute request...`;
+final mb = MiniBase('${origin}');
+final items = await mb.collection('${name}').getList();`;
     }
   }
 
@@ -1782,6 +1813,109 @@ function updateApiModalSnippet() {
   });
 }
 
+// Public Tunnel State & Modal
+let _tunnelState = { active: false, url: null, loading: false };
+
+async function checkTunnelStatus() {
+  try {
+    const res = await window.api.getTunnelStatus();
+    _tunnelState = { active: res.active, url: res.url, loading: false };
+    updateTunnelBtnUI();
+  } catch {}
+}
+
+function updateTunnelBtnUI() {
+  const btn = document.getElementById('public-tunnel-btn');
+  if (!btn) return;
+  if (_tunnelState.active && _tunnelState.url) {
+    btn.style.background = 'rgba(16,185,129,0.15)';
+    btn.style.borderColor = 'rgba(16,185,129,0.4)';
+    btn.style.color = '#10B981';
+    btn.innerHTML = `<span style="width:7px; height:7px; border-radius:50%; background:#10B981; box-shadow:0 0 8px #10B981;"></span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Public Live: ${_tunnelState.url.replace(/^https?:\/\//, '').slice(0, 18)}...</span>`;
+  } else {
+    btn.style.background = 'rgba(255,255,255,0.05)';
+    btn.style.borderColor = 'rgba(255,255,255,0.12)';
+    btn.style.color = 'var(--text-muted)';
+    btn.innerHTML = `<span style="width:7px; height:7px; border-radius:50%; background:var(--text-dim);"></span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Go Public (Internet)</span>`;
+  }
+}
+
+async function openTunnelModal() {
+  await checkTunnelStatus();
+
+  const bodyHtml = `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div style="padding:14px 16px; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.22); font-size:12.5px; line-height:1.5; color:#E2E8F0;">
+        <div style="font-weight:700; color:#38BDF8; margin-bottom:4px; font-size:13.5px; display:flex; align-items:center; gap:6px;">
+          <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Global Remote Access</span>
+        </div>
+        <div>Turn on <strong>Instant Public Tunnel</strong> to get a secure HTTPS link. Use it in your Flutter mobile app, share it with friends, or access your database from anywhere on 4G/5G mobile data!</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px; padding:16px; border-radius:8px; background:#0E1015; border:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-weight:700; font-size:13px; color:#FFFFFF;">Public Cloudflare Tunnel</div>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Status: <strong style="color:${_tunnelState.active ? '#10B981' : 'var(--text-dim)'};">${_tunnelState.active ? 'ONLINE & LIVE' : 'OFFLINE (Local Only)'}</strong></div>
+          </div>
+          <button id="toggle-tunnel-btn" class="btn ${_tunnelState.active ? 'btn-danger' : 'btn-primary'}" onclick="toggleTunnelAction()" style="font-weight:700; padding:6px 14px; font-size:12px;">
+            ${_tunnelState.active ? 'Stop Public Link' : 'Turn ON Public Link'}
+          </button>
+        </div>
+
+        ${_tunnelState.active && _tunnelState.url ? `
+          <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+            <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Your Public MiniBase URL</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" class="input mono" readonly value="${_tunnelState.url}" style="font-size:12px; flex:1; color:#38BDF8; font-weight:600;" />
+              <button class="btn btn-secondary" onclick="copyToClipboard('${_tunnelState.url}')" style="font-size:12px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy</button>
+              <a href="${_tunnelState.url}/_/" target="_blank" class="btn btn-primary" style="font-size:12px;">Open ↗</a>
+            </div>
+
+            <div style="margin-top:8px;">
+              <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Paste in Flutter (minibase.dart)</label>
+              <pre style="margin-top:4px; padding:10px; border-radius:6px; background:#080A0E; border:1px solid rgba(255,255,255,0.08); font-size:12px; font-family:var(--font-mono); color:#10B981;">final mb = MiniBase('${_tunnelState.url}');</pre>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  const footerHtml = `
+    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+  `;
+
+  openModal('Public Cloud Tunnel', bodyHtml, footerHtml);
+}
+
+async function toggleTunnelAction() {
+  const btn = document.getElementById('toggle-tunnel-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Connecting...';
+  }
+
+  try {
+    if (_tunnelState.active) {
+      await window.api.stopTunnel();
+      showToast('Public tunnel stopped', 'info');
+    } else {
+      showToast('Starting secure Cloudflare tunnel...', 'info');
+      await window.api.startTunnel();
+      showToast('Public tunnel is LIVE!', 'success');
+    }
+    await checkTunnelStatus();
+    openTunnelModal();
+  } catch (err) {
+    showToast(err.message, 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = _tunnelState.active ? 'Stop Public Link' : 'Turn ON Public Link';
+    }
+  }
+}
+
 function openApiQuickstartModal() {
   const col = state.activeCollection;
   if (!col) return;
@@ -1797,10 +1931,14 @@ function openApiQuickstartModal() {
       <!-- Top Guide Banner -->
       <div style="padding:12px 16px; border-radius:8px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.22); font-size:12.5px; line-height:1.5; color:#E2E8F0;">
         <div style="font-weight:700; color:#10B981; margin-bottom:3px; display:flex; align-items:center; gap:6px;">
-          <span>⚡ How to connect your website / app:</span>
+          <span>Client SDKs & Integration Guide:</span>
         </div>
         <div>1. Set <strong>API Rules</strong> in <em>Edit Columns</em> to <strong>Everyone (Public)</strong> if you want your frontend to access it without login.</div>
         <div>2. Select your language below, click <strong>Copy Code</strong>, and paste it into your project!</div>
+        <div style="margin-top:6px; display:flex; gap:8px; align-items:center;">
+          <a href="/minibase.dart" download class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px; color:#10B981; border-color:rgba(16,185,129,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download minibase.dart (Flutter SDK)</a>
+          <a href="/js/minibase-sdk.js" download class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px; color:#38BDF8; border-color:rgba(56,189,248,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download minibase-sdk.js (Web SDK)</a>
+        </div>
       </div>
 
       <!-- Language Selector Tabs -->
@@ -1808,19 +1946,19 @@ function openApiQuickstartModal() {
         <label style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); margin-bottom:6px; display:block;">Select Your Language / Framework</label>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="api-lang-tab btn" data-tab="html" onclick="setApiModalTab('html')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            🌐 HTML / JS (0 Install)
+            JavaScript / HTML
           </button>
           <button class="api-lang-tab btn" data-tab="react" onclick="setApiModalTab('react')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            ⚛️ React / Next.js
+            React / Next.js
           </button>
           <button class="api-lang-tab btn" data-tab="fetch" onclick="setApiModalTab('fetch')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            ⚡ Direct fetch()
+            Direct REST API
           </button>
           <button class="api-lang-tab btn" data-tab="flutter" onclick="setApiModalTab('flutter')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            📱 Flutter / Dart
+            Flutter / Dart
           </button>
           <button class="api-lang-tab btn" data-tab="curl" onclick="setApiModalTab('curl')" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid transparent;">
-            💻 cURL
+            cURL (Terminal)
           </button>
         </div>
       </div>
@@ -1829,13 +1967,13 @@ function openApiQuickstartModal() {
       <div>
         <label style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); margin-bottom:6px; display:block;">Action</label>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="api-action-pill btn" data-action="list" onclick="setApiModalAction('list')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">📋 List Records</button>
-          <button class="api-action-pill btn" data-action="view" onclick="setApiModalAction('view')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">👁️ View One</button>
-          <button class="api-action-pill btn" data-action="create" onclick="setApiModalAction('create')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">➕ Create Record</button>
-          <button class="api-action-pill btn" data-action="update" onclick="setApiModalAction('update')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">✏️ Update</button>
-          <button class="api-action-pill btn" data-action="delete" onclick="setApiModalAction('delete')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">🗑️ Delete</button>
-          <button class="api-action-pill btn" data-action="realtime" onclick="setApiModalAction('realtime')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">⚡ Realtime Live</button>
-          ${isAuth ? '<button class="api-action-pill btn" data-action="auth" onclick="setApiModalAction(\'auth\')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">👤 User Login</button>' : ''}
+          <button class="api-action-pill btn" data-action="list" onclick="setApiModalAction('list')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> List Records</button>
+          <button class="api-action-pill btn" data-action="view" onclick="setApiModalAction('view')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> View One</button>
+          <button class="api-action-pill btn" data-action="create" onclick="setApiModalAction('create')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">Create Record</button>
+          <button class="api-action-pill btn" data-action="update" onclick="setApiModalAction('update')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Update</button>
+          <button class="api-action-pill btn" data-action="delete" onclick="setApiModalAction('delete')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</button>
+          <button class="api-action-pill btn" data-action="realtime" onclick="setApiModalAction('realtime')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;">Realtime Stream</button>
+          ${isAuth ? '<button class="api-action-pill btn" data-action="auth" onclick="setApiModalAction(\'auth\')" style="padding:4px 10px; font-size:11.5px; border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> User Auth</button>' : ''}
         </div>
       </div>
 
@@ -1856,7 +1994,7 @@ function openApiQuickstartModal() {
 
   const footerHtml = `
     <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-    <button class="btn btn-primary" onclick="copyApiSnippetAction()">📋 Copy Code & Done</button>
+    <button class="btn btn-primary" onclick="copyApiSnippetAction()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy Code & Done</button>
   `;
 
   openModal(`API & App Integration: "${escapeHtml(col.name)}"`, bodyHtml, footerHtml);
@@ -1869,9 +2007,109 @@ function copyApiSnippetAction() {
   const btn = document.getElementById('copy-api-btn');
   if (btn) {
     const orig = btn.innerHTML;
-    btn.innerHTML = '<span>✅ Copied to Clipboard!</span>';
+    btn.innerHTML = '<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" style="vertical-align:middle; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied to Clipboard!</span>';
     setTimeout(() => { btn.innerHTML = orig; }, 2000);
   }
+}
+
+let _currentRenderedColName = null;
+
+function renderRecordsContent(col, fields) {
+  if (state.records.length === 0) {
+    if (state.searchQuery || state.filterQuery) {
+      return `
+        <div class="empty-state" style="padding:48px 24px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+          <div style="width:64px; height:64px; border-radius:16px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:28px;">
+            🔍
+          </div>
+          <h3 style="font-size:17px; font-weight:700; color:#FFFFFF; margin-bottom:6px; font-family:'Plus Jakarta Sans', sans-serif;">No matching records found</h3>
+          <p style="font-size:13px; color:var(--text-muted); max-width:380px; margin-bottom:20px; line-height:1.6;">
+            No rows matched your search/filter query in <strong>"${escapeHtml(col.name)}"</strong>.
+          </p>
+          <button class="btn btn-secondary" onclick="clearFilters()" style="font-weight:600; padding:8px 18px; font-size:13px; border-radius:8px;">
+            Clear Search & Filter
+          </button>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="empty-state" style="padding:48px 24px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+          <div style="width:64px; height:64px; border-radius:16px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.75"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+          </div>
+          <h3 style="font-size:17px; font-weight:700; color:#FFFFFF; margin-bottom:6px; font-family:'Plus Jakarta Sans', sans-serif;">This table is empty</h3>
+          <p style="font-size:13px; color:var(--text-muted); max-width:380px; margin-bottom:20px; line-height:1.6;">
+            Start adding data to <strong>"${escapeHtml(col.name)}"</strong>. Click the button below to add your first row.
+          </p>
+          
+          <button class="btn btn-primary" onclick="openRecordDrawer()" style="background:#10B981; color:#042F1A; border-color:rgba(16,185,129,0.3); font-weight:700; padding:10px 24px; font-size:14px; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Add First Row</span>
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  const friendlyTypes = { text: 'Text', number: 'Number', bool: 'Yes/No', email: 'Email', url: 'Link', date: 'Date', select: 'Dropdown', json: 'Data', file: 'File', relation: 'Link to Table' };
+
+  return `
+    <table class="data-grid" style="width:100%; border-collapse:collapse; text-align:left; font-size:12.5px;">
+      <thead>
+        <tr style="background:#12141A; position:sticky; top:0; z-index:10; border-bottom:1px solid rgba(255,255,255,0.08);">
+          <th style="width:130px; padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.04em;">Record ID</th>
+          ${col.type === 'auth' ? '<th style="padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600;">Email</th><th style="padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600;">Verified</th>' : ''}
+          ${fields.map(f => `<th style="padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.04em;">${escapeHtml(f.name)} <span style="font-size:9.5px; color:var(--text-faint); font-weight:normal;">(${friendlyTypes[f.type] || f.type})</span></th>`).join('')}
+          <th style="width:140px; padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600;">Created Date</th>
+          <th style="width:80px; padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600; text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${state.records.map(rec => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:background 0.1s ease;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'" onclick="viewRecordDetails('${rec.id}')">
+            <td style="padding:9px 12px;">
+              <span class="cell-id" onclick="copyToClipboard('${rec.id}')" title="Click to copy ID" style="cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.06);">
+                ${rec.id}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </span>
+            </td>
+            ${col.type === 'auth' ? `
+              <td style="padding:9px 12px;"><strong>${escapeHtml(rec.email || '')}</strong></td>
+              <td style="padding:9px 12px;">${rec.verified ? '<span class="cell-bool-true">✓ Yes</span>' : '<span class="cell-bool-false">✗ No</span>'}</td>
+            ` : ''}
+            ${fields.map(f => `<td style="padding:9px 12px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${formatCellValue(rec[f.name], f, rec, col)}</td>`).join('')}
+            <td style="padding:9px 12px; color:var(--text-secondary); font-size:11.5px;" class="mono">${formatDate(rec.created)}</td>
+            <td style="padding:9px 12px; text-align:right; white-space:nowrap;">
+              <button class="btn-icon" onclick="event.stopPropagation(); viewRecordDetails('${rec.id}')" title="View Record Details" style="color:var(--accent-cyan);">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+              <button class="btn-icon" onclick="event.stopPropagation(); openRecordDrawer('${rec.id}')" title="Edit Record">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="btn-icon" style="color:var(--accent-rose);" onclick="event.stopPropagation(); deleteRecordAction('${rec.id}')" title="Delete Record">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderPaginationContent() {
+  return `
+    <div>Showing <strong>${state.records.length}</strong> of <strong>${state.totalItems}</strong> rows</div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="btn btn-secondary btn-icon" ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} onclick="changePage(${state.page - 1})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <span>Page <strong>${state.page}</strong> of <strong>${state.totalPages}</strong></span>
+      <button class="btn btn-secondary btn-icon" ${state.page >= state.totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} onclick="changePage(${state.page + 1})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+  `;
 }
 
 function renderRecordsTable() {
@@ -1880,6 +2118,25 @@ function renderRecordsTable() {
 
   const col = state.activeCollection;
   const fields = col.schema || [];
+
+  const scrollContainer = document.getElementById('records-scroll-container');
+  const paginationContainer = document.getElementById('records-pagination-container');
+
+  // If table container already exists for this collection, update only the table grid and pagination!
+  // This keeps the search input and filter input 100% focused while typing!
+  if (scrollContainer && paginationContainer && _currentRenderedColName === col.name) {
+    scrollContainer.innerHTML = renderRecordsContent(col, fields);
+    paginationContainer.innerHTML = renderPaginationContent();
+
+    const clearSearchBtn = document.getElementById('clear-search-btn');
+    if (clearSearchBtn) clearSearchBtn.style.display = state.searchQuery ? 'inline-block' : 'none';
+
+    const clearFilterBtn = document.getElementById('clear-filter-btn');
+    if (clearFilterBtn) clearFilterBtn.style.display = state.filterQuery ? 'inline-block' : 'none';
+    return;
+  }
+
+  _currentRenderedColName = col.name;
 
   contentView.innerHTML = `
     <div class="collection-view-container" style="display:flex; flex-direction:column; gap:12px; height:100%;">
@@ -1913,7 +2170,7 @@ function renderRecordsTable() {
           </button>
           <button class="btn btn-primary" onclick="openRecordDrawer()" style="background:#10B981; color:#042F1A; border-color:rgba(16,185,129,0.3); font-weight:700;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span>+ Add Row</span>
+            <span>Add Row</span>
           </button>
         </div>
       </div>
@@ -1925,11 +2182,13 @@ function renderRecordsTable() {
         <div class="table-toolbar" style="padding:10px 14px; background:#12141A; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:10px;">
           <div class="search-input-wrapper" style="width:260px; position:relative;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:13px; height:13px; color:var(--text-dim);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" class="input" style="padding-left:30px;" placeholder="Search in ${escapeHtml(col.name)}..." value="${escapeHtml(state.searchQuery)}" onkeyup="handleSearch(event)" />
+            <input id="records-search-input" type="text" class="input" style="padding-left:30px; padding-right:26px;" placeholder="Search in ${escapeHtml(col.name)}..." value="${escapeHtml(state.searchQuery)}" oninput="handleSearchInput(this.value)" onkeyup="handleSearch(event)" />
+            <button id="clear-search-btn" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px; line-height:1; padding:0 4px; display:${state.searchQuery ? 'inline-block' : 'none'};" onclick="clearSearchInput()" title="Clear search">&times;</button>
           </div>
           
-          <div class="search-input-wrapper" style="flex:1;">
-            <input type="text" class="input" placeholder="Filter rows (e.g. status = 'active')" value="${escapeHtml(state.filterQuery)}" onkeyup="handleFilter(event)" />
+          <div class="search-input-wrapper" style="flex:1; position:relative;">
+            <input id="records-filter-input" type="text" class="input" style="padding-right:26px;" placeholder="Filter rows (e.g. status = 'active')" value="${escapeHtml(state.filterQuery)}" oninput="handleFilterInput(this.value)" onkeyup="handleFilter(event)" />
+            <button id="clear-filter-btn" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px; line-height:1; padding:0 4px; display:${state.filterQuery ? 'inline-block' : 'none'};" onclick="clearFilterInput()" title="Clear filter">&times;</button>
           </div>
 
           <div style="display:flex; align-items:center; gap:6px;">
@@ -1947,77 +2206,13 @@ function renderRecordsTable() {
         </div>
 
         <!-- Scrollable Table Grid / Empty State -->
-        <div class="table-scroll" style="flex:1; overflow:auto;">
-          ${state.records.length === 0 ? `
-            <div class="empty-state" style="padding:48px 24px; display:flex; flex-direction:column; align-items:center; text-align:center;">
-              <div style="width:64px; height:64px; border-radius:16px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:28px;">
-                📋
-              </div>
-              <h3 style="font-size:17px; font-weight:700; color:#FFFFFF; margin-bottom:6px; font-family:'Plus Jakarta Sans', sans-serif;">This table is empty</h3>
-              <p style="font-size:13px; color:var(--text-muted); max-width:380px; margin-bottom:20px; line-height:1.6;">
-                Start adding data to <strong>"${escapeHtml(col.name)}"</strong>. Click the button below to add your first row.
-              </p>
-              
-              <button class="btn btn-primary" onclick="openRecordDrawer()" style="background:#10B981; color:#042F1A; border-color:rgba(16,185,129,0.3); font-weight:700; padding:10px 24px; font-size:14px; border-radius:8px;">
-                + Add First Row
-              </button>
-            </div>
-          ` : `
-            <table class="data-grid" style="width:100%; border-collapse:collapse; text-align:left; font-size:12.5px;">
-              <thead>
-                <tr style="background:#12141A; position:sticky; top:0; z-index:10; border-bottom:1px solid rgba(255,255,255,0.08);">
-                  <th style="width:130px; padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.04em;">Record ID</th>
-                  ${col.type === 'auth' ? '<th style="padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600;">Email</th><th style="padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600;">Verified</th>' : ''}
-                  ${fields.map(f => {
-                    const friendlyTypes = { text: 'Text', number: 'Number', bool: 'Yes/No', email: 'Email', url: 'Link', date: 'Date', select: 'Dropdown', json: 'Data', file: 'File', relation: 'Link to Table' };
-                    return `<th style="padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.04em;">${escapeHtml(f.name)} <span style="font-size:9.5px; color:var(--text-faint); font-weight:normal;">(${friendlyTypes[f.type] || f.type})</span></th>`;
-                  }).join('')}
-                  <th style="width:140px; padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600;">Created Date</th>
-                  <th style="width:80px; padding:9px 12px; font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:600; text-align:right;">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${state.records.map(rec => `
-                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.1s ease;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                    <td style="padding:9px 12px;">
-                      <span class="cell-id" onclick="copyToClipboard('${rec.id}')" title="Click to copy ID" style="cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.06);">
-                        ${rec.id}
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                      </span>
-                    </td>
-                    ${col.type === 'auth' ? `
-                      <td style="padding:9px 12px;"><strong>${escapeHtml(rec.email || '')}</strong></td>
-                      <td style="padding:9px 12px;">${rec.verified ? '<span class="cell-bool-true">S Yes</span>' : '<span class="cell-bool-false">S" No</span>'}</td>
-                    ` : ''}
-                    ${fields.map(f => `<td style="padding:9px 12px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${formatCellValue(rec[f.name], f, rec, col)}</td>`).join('')}
-                    <td style="padding:9px 12px; color:var(--text-secondary); font-size:11.5px;" class="mono">${formatDate(rec.created)}</td>
-                    <td style="padding:9px 12px; text-align:right;">
-                      <button class="btn-icon" onclick="openRecordDrawer('${rec.id}')" title="Edit Record">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                      </button>
-                      <button class="btn-icon" style="color:var(--accent-rose);" onclick="deleteRecordAction('${rec.id}')" title="Delete Record">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      </button>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          `}
+        <div id="records-scroll-container" class="table-scroll" style="flex:1; overflow:auto;">
+          ${renderRecordsContent(col, fields)}
         </div>
 
         <!-- Table Pagination Footer -->
-        <div class="table-pagination" style="padding:10px 14px; background:#12141A; border-top:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-muted);">
-          <div>Showing <strong>${state.records.length}</strong> of <strong>${state.totalItems}</strong> rows</div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button class="btn btn-secondary btn-icon" ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} onclick="changePage(${state.page - 1})">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            </button>
-            <span>Page <strong>${state.page}</strong> of <strong>${state.totalPages}</strong></span>
-            <button class="btn btn-secondary btn-icon" ${state.page >= state.totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} onclick="changePage(${state.page + 1})">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </button>
-          </div>
+        <div id="records-pagination-container" class="table-pagination" style="padding:10px 14px; background:#12141A; border-top:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-muted);">
+          ${renderPaginationContent()}
         </div>
       </div>
     </div>
@@ -2067,11 +2262,11 @@ function formatCellValue(val, field, rec, col) {
     if (!isNaN(num) && num >= 1000) {
       const formatted = (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
       if (field.name === 'views') return `<span style="font-size:12px; color:var(--text-secondary); font-weight:500;">x️ ${formatted}</span>`;
-      if (field.name === 'likes') return `<span style="font-size:12px; color:#F472B6; font-weight:500;">❤️ ${formatted}</span>`;
+      if (field.name === 'likes') return `<span style="font-size:12px; color:#F472B6; font-weight:500;"> ${formatted}</span>`;
       return `<span class="mono" style="font-weight:500;">${formatted}</span>`;
     }
     if (field.name === 'views') return `<span style="font-size:12px; color:var(--text-secondary);">x️ ${val}</span>`;
-    if (field.name === 'likes') return `<span style="font-size:12px; color:#F472B6;">❤️ ${val}</span>`;
+    if (field.name === 'likes') return `<span style="font-size:12px; color:#F472B6;"> ${val}</span>`;
     return `<span class="mono">${val}</span>`;
   }
 
@@ -2106,26 +2301,258 @@ function formatDate(isoStr) {
   return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+let searchDebounceTimer = null;
+function handleSearchInput(val) {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    state.searchQuery = (val || '').trim();
+    state.page = 1;
+    loadRecords();
+  }, 200);
+}
+
 function handleSearch(e) {
   if (e.key === 'Enter') {
-    state.searchQuery = e.target.value;
+    clearTimeout(searchDebounceTimer);
+    state.searchQuery = (e.target.value || '').trim();
     state.page = 1;
     loadRecords();
   }
 }
 
+let filterDebounceTimer = null;
+function handleFilterInput(val) {
+  clearTimeout(filterDebounceTimer);
+  filterDebounceTimer = setTimeout(() => {
+    state.filterQuery = (val || '').trim();
+    state.page = 1;
+    loadRecords();
+  }, 350);
+}
+
 function handleFilter(e) {
   if (e.key === 'Enter') {
-    state.filterQuery = e.target.value;
+    clearTimeout(filterDebounceTimer);
+    state.filterQuery = (e.target.value || '').trim();
     state.page = 1;
     loadRecords();
   }
+}
+
+function clearSearchInput() {
+  state.searchQuery = '';
+  const input = document.getElementById('records-search-input');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+  state.page = 1;
+  loadRecords();
+}
+
+function clearFilterInput() {
+  state.filterQuery = '';
+  const input = document.getElementById('records-filter-input');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+  state.page = 1;
+  loadRecords();
+}
+
+function clearFilters() {
+  state.searchQuery = '';
+  state.filterQuery = '';
+  const sInput = document.getElementById('records-search-input');
+  if (sInput) sInput.value = '';
+  const fInput = document.getElementById('records-filter-input');
+  if (fInput) fInput.value = '';
+  state.page = 1;
+  loadRecords();
 }
 
 function changePage(newPage) {
   if (newPage < 1 || newPage > state.totalPages) return;
   state.page = newPage;
   loadRecords();
+}
+
+// 5.5. View Specific Record Details Modal
+let _recordViewTab = 'fields'; // 'fields' | 'json' | 'api'
+
+async function viewRecordDetails(recordId) {
+  const col = state.activeCollection;
+  if (!col) return;
+
+  let record = (state.records || []).find(r => r.id === recordId);
+  try {
+    const fresh = await window.api.getRecord(col.name, recordId);
+    if (fresh && fresh.id) record = fresh;
+  } catch {}
+
+  if (!record) {
+    showToast('Record not found', 'error');
+    return;
+  }
+
+  window.__activeViewRecord = record;
+  _recordViewTab = 'fields';
+
+  renderRecordDetailsModal();
+}
+
+function setRecordViewTab(tab) {
+  _recordViewTab = tab;
+  renderRecordDetailsModal();
+}
+
+function renderRecordDetailsModal() {
+  const col = state.activeCollection;
+  const record = window.__activeViewRecord;
+  if (!col || !record) return;
+
+  const origin = window.location.origin;
+  const apiUrl = `${origin}/api/collections/${col.name}/records/${record.id}`;
+
+  const tabsHtml = `
+    <div style="display:flex; gap:6px; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
+      <button class="btn btn-sm ${_recordViewTab === 'fields' ? 'btn-primary' : 'btn-secondary'}" onclick="setRecordViewTab('fields')">
+        Fields & Values
+      </button>
+      <button class="btn btn-sm ${_recordViewTab === 'json' ? 'btn-primary' : 'btn-secondary'}" onclick="setRecordViewTab('json')">
+        Raw JSON
+      </button>
+      <button class="btn btn-sm ${_recordViewTab === 'api' ? 'btn-primary' : 'btn-secondary'}" onclick="setRecordViewTab('api')">
+        API Link & Code
+      </button>
+    </div>
+  `;
+
+  let bodyHtml = '';
+
+  if (_recordViewTab === 'fields') {
+    const fieldsList = [
+      { name: 'id', label: 'Record ID', type: 'id', val: record.id },
+      ...(col.type === 'auth' ? [
+        { name: 'email', label: 'Email', type: 'email', val: record.email },
+        { name: 'verified', label: 'Email Verified', type: 'bool', val: record.verified },
+      ] : []),
+      ...(col.schema || []).map(f => ({ name: f.name, label: f.name, type: f.type, val: record[f.name] })),
+      { name: 'created', label: 'Created At', type: 'date', val: record.created },
+      { name: 'updated', label: 'Updated At', type: 'date', val: record.updated },
+    ];
+
+    bodyHtml = `
+      ${tabsHtml}
+      <div style="display:flex; flex-direction:column; gap:10px; max-height:55vh; overflow-y:auto; padding-right:4px;">
+        ${fieldsList.map(item => {
+          let renderedVal = '';
+          const val = item.val;
+
+          if (val === null || val === undefined || val === '') {
+            renderedVal = `<span style="color:var(--text-muted); font-size:12px; font-style:italic;">null (empty)</span>`;
+          } else if (item.type === 'file') {
+            const fileUrl = `/api/files/${col.name}/${record.id}/${encodeURIComponent(val)}`;
+            const isImg = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(val);
+            renderedVal = `
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                ${isImg ? `
+                  <a href="${fileUrl}" target="_blank" style="display:inline-block;">
+                    <img src="${fileUrl}" style="max-height:180px; max-width:100%; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.12); box-shadow:0 4px 12px rgba(0,0,0,0.3);" />
+                  </a>
+                ` : ''}
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-secondary" style="font-size:11.5px; padding:4px 10px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> View File: ${escapeHtml(val)}
+                  </a>
+                  <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${origin}${fileUrl}')" style="font-size:11.5px; padding:4px 8px;" title="Copy direct file URL">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy Link
+                  </button>
+                </div>
+              </div>
+            `;
+          } else if (item.type === 'bool') {
+            const isT = Boolean(val === true || val === 1 || val === 'true');
+            renderedVal = isT
+              ? `<span style="display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; background:rgba(16, 185, 129, 0.15); color:#10B981; border:1px solid rgba(16, 185, 129, 0.3);">✓ true (Yes)</span>`
+              : `<span style="display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; background:rgba(239, 68, 68, 0.15); color:#EF4444; border:1px solid rgba(239, 68, 68, 0.3);">✗ false (No)</span>`;
+          } else if (item.type === 'json') {
+            renderedVal = `<pre style="margin:0; padding:8px 10px; border-radius:6px; background:#080A0E; border:1px solid rgba(255,255,255,0.06); font-size:11.5px; font-family:var(--font-mono); color:#A5B4FC; max-height:120px; overflow:auto;">${escapeHtml(typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val))}</pre>`;
+          } else if (item.type === 'date') {
+            renderedVal = `<span class="mono" style="font-size:12.5px; color:#F1F5F9;">${formatDate(val)} <span style="font-size:11px; color:var(--text-muted);">(${escapeHtml(String(val))})</span></span>`;
+          } else if (item.type === 'id') {
+            renderedVal = `
+              <span style="display:inline-flex; align-items:center; gap:8px;">
+                <code style="font-family:var(--font-mono); font-size:13px; color:#38BDF8; font-weight:600; background:rgba(56,189,248,0.1); padding:2px 8px; border-radius:4px; border:1px solid rgba(56,189,248,0.2);">${escapeHtml(val)}</code>
+                <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${escapeHtml(val)}')" style="padding:2px 8px; font-size:11px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy ID</button>
+              </span>
+            `;
+          } else {
+            renderedVal = `<span style="font-size:13px; color:#F8FAFC; word-break:break-word; line-height:1.5;">${escapeHtml(String(val))}</span>`;
+          }
+
+          return `
+            <div style="display:flex; flex-direction:column; gap:4px; padding:10px 12px; border-radius:8px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.05);">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em;">${escapeHtml(item.label)}</span>
+                <span style="font-size:10px; color:var(--text-dim); font-family:var(--font-mono);">${escapeHtml(item.type)}</span>
+              </div>
+              <div>${renderedVal}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } else if (_recordViewTab === 'json') {
+    const jsonStr = JSON.stringify(record, null, 2);
+    bodyHtml = `
+      ${tabsHtml}
+      <div style="position:relative;">
+        <pre style="margin:0; padding:14px; border-radius:8px; background:#080A0E; border:1px solid rgba(255,255,255,0.08); font-size:12px; line-height:1.5; font-family:var(--font-mono); color:#38BDF8; max-height:55vh; overflow:auto;"><code>${escapeHtml(jsonStr)}</code></pre>
+        <button class="btn btn-sm btn-secondary" onclick="copyToClipboard(JSON.stringify(window.__activeViewRecord, null, 2))" style="position:absolute; right:10px; top:10px; font-size:11px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy JSON
+        </button>
+      </div>
+    `;
+  } else if (_recordViewTab === 'api') {
+    bodyHtml = `
+      ${tabsHtml}
+      <div style="display:flex; flex-direction:column; gap:12px; max-height:55vh; overflow-y:auto;">
+        <div>
+          <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Direct API Endpoint (GET)</label>
+          <div style="display:flex; gap:6px; margin-top:4px;">
+            <input type="text" class="input mono" readonly value="${apiUrl}" style="font-size:12px; flex:1;" />
+            <button class="btn btn-secondary" onclick="copyToClipboard('${apiUrl}')" style="font-size:12px;">Copy</button>
+            <a href="${apiUrl}" target="_blank" class="btn btn-primary" style="font-size:12px;">Open ↗</a>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">cURL Command</label>
+          <pre style="margin-top:4px; padding:10px; border-radius:6px; background:#080A0E; border:1px solid rgba(255,255,255,0.08); font-size:11.5px; font-family:var(--font-mono); color:#10B981;">curl -X GET "${apiUrl}"</pre>
+        </div>
+
+        <div>
+          <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">JavaScript Fetch</label>
+          <pre style="margin-top:4px; padding:10px; border-radius:6px; background:#080A0E; border:1px solid rgba(255,255,255,0.08); font-size:11.5px; font-family:var(--font-mono); color:#A5B4FC;">const record = await fetch('${apiUrl}').then(r => r.json());
+console.log(record);</pre>
+        </div>
+      </div>
+    `;
+  }
+
+  const footerHtml = `
+    <button class="btn btn-danger" style="margin-right:auto;" onclick="closeModal(); deleteRecordAction('${record.id}');">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete
+    </button>
+    <button class="btn btn-primary" onclick="closeModal(); openRecordDrawer('${record.id}');">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit Record
+    </button>
+    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+  `;
+
+  openModal(`Record Details: ${col.name} / ${record.id}`, bodyHtml, footerHtml);
 }
 
 // 6. Record Drawer (Create / Edit)
@@ -2362,21 +2789,21 @@ function openCollectionModal(existingCollection = null) {
     systemHtml = '<div style="margin-bottom:16px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer;" onclick="toggleSystemFields()"><h4 style="font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;">System Fields</h4><svg id="system-fields-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-dim);transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg></div><div id="system-fields-list" style="display:none;flex-direction:column;gap:0;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">' + rows + '</div></div>';
   }
 
-  const ruleRow = (label, id, val) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;"><span style="font-size:12px;color:var(--text-secondary);min-width:180px;flex-shrink:0;">${label}</span><select id="${id}" class="input" style="flex:1;font-size:12px;padding:6px 10px;"><option value="__null__"${!val && val !== '' ? ' selected' : ''}>🔒 Admin Only (Private)</option><option value="@request.auth.id != ''"${val === "@request.auth.id != ''" ? ' selected' : ''}>👤 Logged-in Users Only</option><option value=""${val === '' ? ' selected' : ''}>🌍 Everyone (Public)</option></select></div>`;
+  const ruleRow = (label, id, val) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;"><span style="font-size:12px;color:var(--text-secondary);min-width:180px;flex-shrink:0;">${label}</span><select id="${id}" class="input" style="flex:1;font-size:12px;padding:6px 10px;"><option value="__null__"${!val && val !== '' ? ' selected' : ''}>Admin Only (Private)</option><option value="@request.auth.id != ''"${val === "@request.auth.id != ''" ? ' selected' : ''}>Auth Users Only</option><option value=""${val === '' ? ' selected' : ''}>Everyone (Public)</option></select></div>`;
 
   const starterTemplatesHtml = !isEdit ? `
     <div style="margin-bottom:16px; padding:12px 14px; border-radius:8px; background:rgba(56,189,248,0.05); border:1px solid rgba(56,189,248,0.18);">
       <div style="font-size:11px; font-weight:700; color:#38BDF8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
-        <span>⚡ 1-Click Starter Templates</span>
+        <span>Starter Templates</span>
         <span style="font-size:10px; color:var(--text-muted); font-weight:normal;">Auto-fills columns & rules</span>
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:6px;">
-        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('products')">🛍️ Products Store</button>
-        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('blog')">📝 Blog Posts</button>
-        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('gallery')">🖼️ Wallpaper Gallery</button>
-        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('team')">👥 Team / Staff</button>
-        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('contact')">💬 Contact Form</button>
-        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('tasks')">📋 Tasks</button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('products')">Products Store</button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('blog')">Blog Posts</button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('gallery')">Wallpaper Gallery</button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('team')">Team Directory</button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('contact')">Contact Submissions</button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="applyCollectionTemplate('tasks')">Task Manager</button>
       </div>
     </div>
   ` : '';
@@ -2420,17 +2847,17 @@ function openCollectionModal(existingCollection = null) {
         
         <div id="access-rules-panel" style="display:none; flex-direction:column;">
           <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
-            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('public_read')">🌐 Public Read</button>
-            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('public_write')">✉️ Public Form</button>
-            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('public_all')">🌍 Full Public</button>
-            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('users_only')">👤 Logged-in Users</button>
-            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('admin_only')">🔒 Admin Only</button>
+            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('public_read')">Public Read</button>
+            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('public_write')">Public Submit</button>
+            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('public_all')">Full Public</button>
+            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('users_only')">Auth Users</button>
+            <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="applyRulePreset('admin_only')">Admin Only</button>
           </div>
-          ${ruleRow('📋 List (Browse)', 'rule-list', col.listRule)}
-          ${ruleRow('👁️ View (Single)', 'rule-view', col.viewRule)}
-          ${ruleRow('➕ Create (Insert)', 'rule-create', col.createRule)}
-          ${ruleRow('✏️ Update (Edit)', 'rule-update', col.updateRule)}
-          ${ruleRow('🗑️ Delete (Remove)', 'rule-delete', col.deleteRule)}
+          ${ruleRow('List (Browse)', 'rule-list', col.listRule)}
+          ${ruleRow('View (Single)', 'rule-view', col.viewRule)}
+          ${ruleRow('Create (Insert)', 'rule-create', col.createRule)}
+          ${ruleRow('Update (Edit)', 'rule-update', col.updateRule)}
+          ${ruleRow('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete (Remove)', 'rule-delete', col.deleteRule)}
         </div>
       </div>
     </div>
@@ -3006,13 +3433,13 @@ async function loadSettingsView() {
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:11.5px; color:var(--text-muted);">Provider Preset:</span>
               <select id="smtp-preset-select" class="input select" style="font-size:12px; padding:4px 10px; width:160px;" onchange="applySmtpPreset(this.value)">
-                <option value="custom">⚙️ Custom SMTP</option>
-                <option value="gmail">🔴 Gmail</option>
-                <option value="resend">⚡ Resend</option>
-                <option value="sendgrid">🟦 SendGrid</option>
-                <option value="brevo">🟢 Brevo (Sendinblue)</option>
-                <option value="mailgun">📭 Mailgun</option>
-                <option value="outlook">🔷 Outlook / Office 365</option>
+                <option value="custom">Custom SMTP</option>
+                <option value="gmail">Google Gmail</option>
+                <option value="resend">Resend API</option>
+                <option value="sendgrid">SendGrid</option>
+                <option value="brevo">Brevo</option>
+                <option value="mailgun">Mailgun</option>
+                <option value="outlook">Microsoft 365 / Outlook</option>
               </select>
             </div>
           </div>
@@ -3143,7 +3570,7 @@ function applySmtpPreset(preset) {
     if (tlsEl) tlsEl.checked = true;
     if (hintEl) {
       hintEl.style.display = 'block';
-      hintEl.innerHTML = '<strong>💡 Gmail Setup:</strong> In Google Account &rarr; Security &rarr; 2-Step Verification, generate a 16-character <strong>App Password</strong> and paste it in the Password field.';
+      hintEl.innerHTML = '<strong>Gmail Setup:</strong> In Google Account &rarr; Security &rarr; 2-Step Verification, generate a 16-character <strong>App Password</strong> and paste it in the Password field.';
     }
   } else if (preset === 'resend') {
     if (hostEl) hostEl.value = 'smtp.resend.com';
@@ -3152,7 +3579,7 @@ function applySmtpPreset(preset) {
     if (tlsEl) tlsEl.checked = true;
     if (hintEl) {
       hintEl.style.display = 'block';
-      hintEl.innerHTML = '<strong>💡 Resend Setup:</strong> Username is <code>resend</code>. Password is your Resend API Key (<code>re_...</code>).';
+      hintEl.innerHTML = '<strong>Resend Setup:</strong> Username is <code>resend</code>. Password is your Resend API Key (<code>re_...</code>).';
     }
   } else if (preset === 'sendgrid') {
     if (hostEl) hostEl.value = 'smtp.sendgrid.net';
@@ -3161,7 +3588,7 @@ function applySmtpPreset(preset) {
     if (tlsEl) tlsEl.checked = true;
     if (hintEl) {
       hintEl.style.display = 'block';
-      hintEl.innerHTML = '<strong>💡 SendGrid Setup:</strong> Username is literally <code>apikey</code>. Password is your SendGrid API Key (<code>SG....</code>).';
+      hintEl.innerHTML = '<strong>SendGrid Setup:</strong> Username is literally <code>apikey</code>. Password is your SendGrid API Key (<code>SG....</code>).';
     }
   } else if (preset === 'brevo') {
     if (hostEl) hostEl.value = 'smtp-relay.brevo.com';
@@ -3169,7 +3596,7 @@ function applySmtpPreset(preset) {
     if (tlsEl) tlsEl.checked = true;
     if (hintEl) {
       hintEl.style.display = 'block';
-      hintEl.innerHTML = '<strong>💡 Brevo Setup:</strong> Use your Brevo SMTP login email and Master SMTP Key from Brevo &rarr; SMTP & API.';
+      hintEl.innerHTML = '<strong>Brevo Setup:</strong> Use your Brevo SMTP login email and Master SMTP Key from Brevo &rarr; SMTP & API.';
     }
   } else if (preset === 'mailgun') {
     if (hostEl) hostEl.value = 'smtp.mailgun.org';
@@ -3177,7 +3604,7 @@ function applySmtpPreset(preset) {
     if (tlsEl) tlsEl.checked = true;
     if (hintEl) {
       hintEl.style.display = 'block';
-      hintEl.innerHTML = '<strong>💡 Mailgun Setup:</strong> Use your domain SMTP credentials from Mailgun &rarr; Sending &rarr; Domains &rarr; SMTP.';
+      hintEl.innerHTML = '<strong>Mailgun Setup:</strong> Use your domain SMTP credentials from Mailgun &rarr; Sending &rarr; Domains &rarr; SMTP.';
     }
   } else if (preset === 'outlook') {
     if (hostEl) hostEl.value = 'smtp.office365.com';
@@ -3185,7 +3612,7 @@ function applySmtpPreset(preset) {
     if (tlsEl) tlsEl.checked = true;
     if (hintEl) {
       hintEl.style.display = 'block';
-      hintEl.innerHTML = '<strong>💡 Outlook Setup:</strong> Enter your full Microsoft 365 / Outlook email and password.';
+      hintEl.innerHTML = '<strong>Outlook Setup:</strong> Enter your full Microsoft 365 / Outlook email and password.';
     }
   } else {
     if (hintEl) hintEl.style.display = 'none';
