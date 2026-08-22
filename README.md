@@ -29,19 +29,25 @@ An open-source, embedded PocketBase alternative built natively with Node.js & SQ
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (1-Command Install)
 
-### 1. Install & Run Locally
+### Option A: 1-Click VPS / Linux / Mac Install (Recommended)
+Paste this single command in your server terminal:
+```bash
+curl -fsSL https://raw.githubusercontent.com/kothalkarkkartik/MiniBase/main/scripts/install.sh | bash
+```
+*Auto-detects OS, installs Node.js if needed, sets up 24/7 background system service, and launches MiniBase!*
 
+---
+
+### Option B: Manual Local Setup
 ```bash
 # Clone the repository
 git clone https://github.com/kothalkarkkartik/MiniBase.git
 cd MiniBase
 
-# Install dependencies
+# Install dependencies & start
 npm install
-
-# Start the MiniBase server
 node bin/minibase.js serve
 ```
 
