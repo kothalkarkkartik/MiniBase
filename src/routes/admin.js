@@ -410,12 +410,12 @@ adminRouter.post('/test-email', requireAdmin, async (req, res) => {
 adminRouter.get('/backup/export', requireAdmin, (req, res) => {
   try {
     const db = getDB();
-    const collections = db.query(`SELECT * FROM _collections`);
-    const admins = db.query(`SELECT id, email, tokenKey, avatar, created, updated FROM _admins`);
+    const collections = db.queryAll(`SELECT * FROM _collections`);
+    const admins = db.queryAll(`SELECT id, email, tokenKey, avatar, created, updated FROM _admins`);
     const tablesData = {};
 
     for (const col of collections) {
-      const records = db.query(`SELECT * FROM "${col.name}"`);
+      const records = db.queryAll(`SELECT * FROM "${col.name}"`);
       tablesData[col.name] = records;
     }
 
@@ -471,11 +471,8 @@ adminRouter.post('/backup/restore', requireAdmin, async (req, res) => {
             [col.id || generateId(), col.name, col.type || 'base', schemaJson, col.listRule, col.viewRule, col.createRule, col.updateRule, col.deleteRule, indexesJson, optionsJson, col.created || new Date().toISOString(), col.updated || new Date().toISOString()]
           );
         }
-        SchemaManager.syncTableSchema(col.name, col.schema || []);
+        SchemaManager.syncCollectionTable(col);
       }
-
-      // Reload schemas in memory
-      SchemaManager.loadCollections();
 
       // 2. Restore Records
       for (const [colName, records] of Object.entries(backup.data)) {

@@ -1800,7 +1800,7 @@ function openConnectAppModal() {
   const col = state.activeCollection;
   if (!col) return;
 
-  const origin = _tunnelState.active && _tunnelState.url ? _tunnelState.url : window.location.origin;
+  const origin = (typeof _tunnelState !== 'undefined' && _tunnelState.active && _tunnelState.url) ? _tunnelState.url : (window.location?.origin || 'http://localhost:8090');
   const colName = col.name;
   const fields = col.schema || [];
 
@@ -1827,7 +1827,7 @@ class MiniBaseClient {
       final data = jsonDecode(res.body);
       return data['items'];
     }
-    throw Exception('Failed to load records: ${res.body}');
+    throw Exception('Failed to load records: ' + res.body);
   }
 
   // 2. Create Record
