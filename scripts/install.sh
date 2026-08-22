@@ -114,7 +114,13 @@ else
     nohup node bin/minibase.js serve --http=0.0.0.0:8090 --tunnel > minibase.log 2>&1 &
 fi
 
-# 6. Detect IP
+# 6. Setup Global 'minibase' CLI Command
+if [ -f "$INSTALL_DIR/scripts/minibase-cli.sh" ]; then
+    chmod +x "$INSTALL_DIR/scripts/minibase-cli.sh"
+    sudo ln -sf "$INSTALL_DIR/scripts/minibase-cli.sh" /usr/local/bin/minibase 2>/dev/null || true
+fi
+
+# 7. Detect IP
 SERVER_IP=$(curl -s https://api.ipify.org || echo "YOUR_VPS_IP")
 
 echo ""
@@ -126,8 +132,9 @@ echo -e "  ➜ Default Admin Email:      ${YELLOW}admin@minibase.io${NC}"
 echo -e "  ➜ Default Admin Password:   ${YELLOW}admin12345${NC}"
 echo -e "  ➜ Data Directory:           ${CYAN}${INSTALL_DIR}/minibase_data${NC}"
 echo ""
-echo -e "  ${BOLD}Commands:${NC}"
-echo -e "  • Restart Service:  ${CYAN}sudo systemctl restart minibase${NC}"
-echo -e "  • View Live Logs:   ${CYAN}sudo journalctl -u minibase -f${NC}"
-echo -e "  • Stop Service:     ${CYAN}sudo systemctl stop minibase${NC}"
+echo -e "  ${BOLD}⚡ Quick Management Commands (Run from anywhere):${NC}"
+echo -e "  • Check Status:     ${CYAN}minibase status${NC}"
+echo -e "  • View Live Logs:   ${CYAN}minibase logs${NC}"
+echo -e "  • Restart Server:   ${CYAN}minibase restart${NC}"
+echo -e "  • Stop Server:      ${CYAN}minibase stop${NC}"
 echo -e "${GREEN}======================================================${NC}"
