@@ -1,7 +1,8 @@
 @echo off
 title MiniBase Studio
+color 0A
 echo ===================================================
-echo   Starting MiniBase Backend-as-a-Service (BaaS)
+echo   ⚡ MiniBase BaaS — Local Studio Launcher
 echo ===================================================
 
 :: Check if node is installed
@@ -15,12 +16,16 @@ if %errorlevel% neq 0 (
 
 :: Check if node_modules exists, otherwise install dependencies
 if not exist node_modules (
-    echo Installing dependencies...
+    echo [1/2] Installing dependencies...
     call npm install --no-audit --no-fund
 )
 
-:: Start MiniBase with auto-open browser
-echo Launching MiniBase on http://localhost:8090/_/ ...
-node bin/minibase.js serve --open
+:: Launch browser directly
+timeout /t 1 /nobreak >nul
+start "" "http://localhost:8090/_/"
+
+:: Start MiniBase server
+echo [2/2] Launching MiniBase Studio on http://localhost:8090/_/ ...
+node bin/minibase.js serve
 
 pause

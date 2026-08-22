@@ -41,9 +41,14 @@ function printHelp() {
 }
 
 function openBrowser(url) {
-  const start = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
   try {
-    spawn(start, [url], { shell: true, detached: true, stdio: 'ignore' }).unref();
+    if (process.platform === 'win32') {
+      spawn('cmd.exe', ['/c', 'start', '""', url], { detached: true, stdio: 'ignore' }).unref();
+    } else if (process.platform === 'darwin') {
+      spawn('open', [url], { detached: true, stdio: 'ignore' }).unref();
+    } else {
+      spawn('xdg-open', [url], { detached: true, stdio: 'ignore' }).unref();
+    }
   } catch {}
 }
 
@@ -102,30 +107,32 @@ if (command === 'admin' && args[1] === 'create') {
 }
 
 // Start MiniBase Server
-const { app } = await import('../src/index.js');
-const { config } = await import('../src/config.js');
+try {
+  const { app } = await import('../src/index.js');
+  const { config } = await import('../src/config.js');
 
-if (args.includes('--open') || process.env.OPEN_BROWSER === 'true') {
-  setTimeout(() => {
-    openBrowser(`http://localhost:${config.port}/_/`);
-  }, 500);
-}
+  const shouldOpen = !args.includes('--no-open');
+  if (shouldOpen) {
+    setTimeout(() => {
+      openBrowser(`http://localhost:${config.port}/_/`);
+    }, 600);
+  }
 
-if (args.includes('--tunnel') || args.includes('--public') || args.includes('--subdomain') || process.env.MINIBASE_TUNNEL === 'true') {
-  const { TunnelManager } = await import('../src/core/tunnel.js');
+  if (args.includes('--tunnel') || args.includes('--public') || args.includes('--subdomain') || process.env.MINIBASE_TUNNEL === 'true') {
+    const { TunnelManager } = await import('../src/core/tunnel.js');
 
-  const getArgValue = (flag) => {
-    const idx = args.indexOf(flag);
-    return idx !== -1 && args[idx + 1] ? args[idx + 1] : null;
-  };
+    const getArgValue = (flag) => {
+      const idx = args.indexOf(flag);
+      return idx !== -1 && args[idx + 1] ? args[idx + 1] : null;
+    };
 
-  const subdomain = getArgValue('--subdomain') || process.env.MINIBASE_SUBDOMAIN;
-  const token = getArgValue('--token') || process.env.CLOUDFLARE_TUNNEL_TOKEN;
-  const domain = getArgValue('--domain') || process.env.MINIBASE_DOMAIN;
+    const subdomain = getArgValue('--subdomain') || process.env.MINIBASE_SUBDOMAIN;
+    const token = getArgValue('--token') || process.env.CLOUDFLARE_TUNNEL_TOKEN;
+    const domain = getArgValue('--domain') || process.env.MINIBASE_DOMAIN;
 
-  try {
-    const publicUrl = await TunnelManager.start(config.port, { subdomain, token, domain });
-    console.log(`
+    try {
+      const publicUrl = await TunnelManager.start(config.port, { subdomain, token, domain });
+      console.log(`
   \x1b[38;2;16;185;129m┌──────────────────────────────────────────────────────────────────┐
   │                                                                  │
   │   🌍 MiniBase is LIVE Worldwide (${subdomain ? `Custom Subdomain: ${subdomain}` : 'Public Tunnel'})
@@ -138,8 +145,17 @@ if (args.includes('--tunnel') || args.includes('--public') || args.includes('--s
   │                                                                  │
   └──────────────────────────────────────────────────────────────────┘\x1b[0m
 `);
-  } catch (err) {
-    console.error('Failed to start public tunnel:', err.message);
+    } catch (err) {
+      console.error('Failed to start public tunnel:', err.message);
+    }
+  }
+} catch (err) {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`\n\x1b[33m➜ Port is already running. Opening Admin Studio in your browser...\x1b[0m`);
+    openBrowser(`http://localhost:8090/_/`);
+  } else {
+    console.error('\x1b[31mError starting MiniBase:\x1b[0m', err.message);
   }
 }
+
 
