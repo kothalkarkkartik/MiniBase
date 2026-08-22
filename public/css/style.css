@@ -130,6 +130,16 @@ body::before {
   flex-direction: column;
   height: 100vh;
   z-index: 30;
+  transition: width 0.22s cubic-bezier(0.2, 0, 0, 1), min-width 0.22s cubic-bezier(0.2, 0, 0, 1), margin-left 0.22s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sidebar-collapsed .sidebar {
+  width: 0 !important;
+  min-width: 0 !important;
+  margin-left: -250px !important;
+  overflow: hidden !important;
+  border-right-color: transparent !important;
+  pointer-events: none !important;
 }
 
 .brand-header {

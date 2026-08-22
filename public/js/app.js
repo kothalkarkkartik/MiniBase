@@ -1275,9 +1275,20 @@ function renderForgotPasswordView() {
 }
 
 // 3. Main App Layout
+function toggleSidebar() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  const isCollapsed = app.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('minibase_sidebar_collapsed', isCollapsed ? '1' : '0');
+}
+
 function renderAppLayout() {
   const app = document.getElementById('app');
   if (!app) return;
+
+  if (localStorage.getItem('minibase_sidebar_collapsed') === '1') {
+    app.classList.add('sidebar-collapsed');
+  }
 
   app.innerHTML = `
     <!-- DevTools Studio Sidebar -->
@@ -1286,9 +1297,14 @@ function renderAppLayout() {
         <div class="brand-logo">
           ${getMiniBaseLogoText('sm')}
         </div>
-        <div class="status-badge">
-          <span class="pulse-dot"></span>
-          <span>v1.0</span>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <div class="status-badge">
+            <span class="pulse-dot"></span>
+            <span>v1.0</span>
+          </div>
+          <button class="btn-icon" onclick="toggleSidebar()" title="Collapse Menu (Ctrl+B)" style="width:24px; height:24px; color:var(--text-dim);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
       </div>
 
@@ -1364,7 +1380,10 @@ function renderAppLayout() {
     <!-- Main View -->
     <main class="main-view">
       <div class="topbar">
-        <div class="topbar-left" style="display:flex; align-items:center; gap:12px;">
+        <div class="topbar-left" style="display:flex; align-items:center; gap:10px;">
+          <button id="sidebar-toggle-btn" class="btn-icon" onclick="toggleSidebar()" title="Toggle Menu (Ctrl+B)" style="color:var(--text-muted); width:28px; height:28px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
           <div id="topbar-title-section" class="topbar-title">Dashboard</div>
           <button id="public-tunnel-btn" class="btn btn-sm" onclick="openTunnelModal()" style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; padding:4px 10px; border-radius:12px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); color:#38BDF8; font-weight:600;">
             <span style="width:7px; height:7px; border-radius:50%; background:#38BDF8; box-shadow:0 0 8px #38BDF8;"></span>
