@@ -43,6 +43,6 @@ Thumbs.db
 **/ios/.symlinks/
 
 # Standalone Executables
-minibase.exe
+*.exe
 minibase-linux
 dist/
