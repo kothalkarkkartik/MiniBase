@@ -406,6 +406,99 @@ adminRouter.post('/test-email', requireAdmin, async (req, res) => {
   }
 });
 
+// Export Full Database Backup
+adminRouter.get('/backup/export', requireAdmin, (req, res) => {
+  try {
+    const db = getDB();
+    const collections = db.query(`SELECT * FROM _collections`);
+    const admins = db.query(`SELECT id, email, tokenKey, avatar, created, updated FROM _admins`);
+    const tablesData = {};
+
+    for (const col of collections) {
+      const records = db.query(`SELECT * FROM "${col.name}"`);
+      tablesData[col.name] = records;
+    }
+
+    const backup = {
+      version: '1.0.0',
+      exportedAt: new Date().toISOString(),
+      appName: config.appName,
+      collections: collections.map(c => ({
+        ...c,
+        schema: typeof c.schema === 'string' ? JSON.parse(c.schema || '[]') : c.schema,
+        indexes: typeof c.indexes === 'string' ? JSON.parse(c.indexes || '[]') : c.indexes,
+        options: typeof c.options === 'string' ? JSON.parse(c.options || '{}') : c.options,
+      })),
+      admins,
+      data: tablesData,
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="minibase_backup_${new Date().toISOString().slice(0,10)}.json"`);
+    res.send(JSON.stringify(backup, null, 2));
+  } catch (err) {
+    res.status(500).json({ code: 500, message: 'Backup export failed: ' + err.message });
+  }
+});
+
+// Restore Full Database Backup
+adminRouter.post('/backup/restore', requireAdmin, async (req, res) => {
+  try {
+    const { backup } = req.body;
+    if (!backup || !backup.collections || !backup.data) {
+      res.status(400).json({ code: 400, message: 'Invalid backup file format' });
+      return;
+    }
+
+    const db = getDB();
+    db.transaction(() => {
+      // 1. Restore Collections
+      for (const col of backup.collections) {
+        const existing = SchemaManager.getCollection(col.name);
+        const schemaJson = JSON.stringify(col.schema || []);
+        const indexesJson = JSON.stringify(col.indexes || []);
+        const optionsJson = JSON.stringify(col.options || {});
+
+        if (existing) {
+          db.run(
+            `UPDATE _collections SET type = ?, schema = ?, listRule = ?, viewRule = ?, createRule = ?, updateRule = ?, deleteRule = ?, indexes = ?, options = ?, updated = ? WHERE name = ?`,
+            [col.type, schemaJson, col.listRule, col.viewRule, col.createRule, col.updateRule, col.deleteRule, indexesJson, optionsJson, new Date().toISOString(), col.name]
+          );
+        } else {
+          db.run(
+            `INSERT INTO _collections (id, name, type, schema, listRule, viewRule, createRule, updateRule, deleteRule, indexes, options, created, updated)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [col.id || generateId(), col.name, col.type || 'base', schemaJson, col.listRule, col.viewRule, col.createRule, col.updateRule, col.deleteRule, indexesJson, optionsJson, col.created || new Date().toISOString(), col.updated || new Date().toISOString()]
+          );
+        }
+        SchemaManager.syncTableSchema(col.name, col.schema || []);
+      }
+
+      // Reload schemas in memory
+      SchemaManager.loadCollections();
+
+      // 2. Restore Records
+      for (const [colName, records] of Object.entries(backup.data)) {
+        if (!Array.isArray(records)) continue;
+        for (const rec of records) {
+          if (!rec.id) continue;
+          const fields = Object.keys(rec);
+          const placeholders = fields.map(() => '?').join(', ');
+          const values = Object.values(rec);
+          db.run(
+            `INSERT OR REPLACE INTO "${colName}" (${fields.map(f => `"${f}"`).join(', ')}) VALUES (${placeholders})`,
+            values
+          );
+        }
+      }
+    });
+
+    res.json({ message: 'Backup restored successfully', collectionsCount: backup.collections.length });
+  } catch (err) {
+    res.status(500).json({ code: 500, message: 'Backup restore failed: ' + err.message });
+  }
+});
+
 // Delete admin account by ID (placed after static routes)
 adminRouter.delete('/:id', requireAdmin, (req, res) => {
   const db = getDB();

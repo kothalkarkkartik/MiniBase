@@ -1921,3 +1921,113 @@ body::before {
   font-size: 11px;
   color: var(--text-muted);
 }
+
+/* Inline Cell Editing */
+.cell-editable {
+  cursor: cell !important;
+  position: relative;
+}
+.cell-editable:hover {
+  outline: 1px dashed rgba(56, 189, 248, 0.45);
+  outline-offset: -2px;
+}
+.cell-editing {
+  padding: 2px 4px !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+.inline-cell-input {
+  width: 100%;
+  height: 28px;
+  background: #0A0D14;
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--radius-sm);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-family: inherit;
+  padding: 0 8px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+.inline-cell-select {
+  width: 100%;
+  height: 28px;
+  background: #0A0D14;
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--radius-sm);
+  color: #FFFFFF;
+  font-size: 12px;
+  padding: 0 6px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+.cell-flash-success {
+  animation: cellFlash 0.8s ease;
+}
+@keyframes cellFlash {
+  0% { background: rgba(16, 185, 129, 0.4); }
+  100% { background: transparent; }
+}
+
+/* Visual Filter Bar */
+.filter-builder-card {
+  background: #0E1118;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: popupSlideDown 0.18s ease;
+}
+.filter-rule-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Import Dropzone */
+.import-dropzone {
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  padding: 32px 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.import-dropzone:hover, .import-dropzone.dragover {
+  border-color: var(--brand-primary);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+/* Code Snippet Tabs */
+.connect-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 14px;
+}
+.connect-tab-btn {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.connect-tab-btn.active {
+  color: #FFFFFF;
+  border-bottom-color: var(--brand-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+.connect-tab-btn:hover:not(.active) {
+  color: var(--text-main);
+}

@@ -1291,6 +1291,706 @@ function toggleSidebar() {
   localStorage.setItem('minibase_sidebar_collapsed', isCollapsed ? '1' : '0');
 }
 
+
+// =========================================================
+// POWER FEATURE 1: Inline Cell Editing (Excel/Notion Style)
+// =========================================================
+let _activeInlineEditor = null;
+
+function startInlineEdit(cellEl, recordId, fieldName, fieldType, colName) {
+  if (_activeInlineEditor && _activeInlineEditor.cell === cellEl) return;
+  if (_activeInlineEditor) {
+    saveInlineEdit(_activeInlineEditor.input, _activeInlineEditor.recordId, _activeInlineEditor.fieldName, _activeInlineEditor.fieldType, _activeInlineEditor.colName);
+  }
+
+  const rec = state.records.find(r => r.id === recordId);
+  if (!rec) return;
+
+  const currentVal = rec[fieldName];
+  cellEl.classList.add('cell-editing');
+  cellEl.dataset.origHtml = cellEl.innerHTML;
+
+  if (fieldType === 'bool') {
+    const isTrue = Boolean(currentVal === true || currentVal === 1 || currentVal === 'true' || currentVal === '1');
+    const newVal = !isTrue;
+    saveInlineEditDirect(cellEl, recordId, fieldName, newVal, colName);
+    return;
+  }
+
+  if (fieldType === 'select') {
+    const col = state.activeCollection;
+    const f = (col.schema || []).find(f => f.name === fieldName);
+    const options = f?.options?.values || [];
+    cellEl.innerHTML = `
+      <select class="inline-cell-select" onchange="saveInlineEdit(this, '${recordId}', '${fieldName}', '${fieldType}', '${colName}')" onblur="saveInlineEdit(this, '${recordId}', '${fieldName}', '${fieldType}', '${colName}')">
+        <option value="">-- None --</option>
+        ${options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === currentVal ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
+      </select>
+    `;
+    const sel = cellEl.querySelector('select');
+    sel.focus();
+    _activeInlineEditor = { cell: cellEl, input: sel, recordId, fieldName, fieldType, colName };
+    return;
+  }
+
+  cellEl.innerHTML = `
+    <input type="${fieldType === 'number' ? 'number' : 'text'}" class="inline-cell-input" value="${escapeHtml(currentVal !== null && currentVal !== undefined ? currentVal : '')}" onkeydown="handleInlineKeydown(event, this, '${recordId}', '${fieldName}', '${fieldType}', '${colName}')" onblur="saveInlineEdit(this, '${recordId}', '${fieldName}', '${fieldType}', '${colName}')" />
+  `;
+
+  const input = cellEl.querySelector('input');
+  input.focus();
+  input.select();
+  _activeInlineEditor = { cell: cellEl, input, recordId, fieldName, fieldType, colName };
+}
+
+function handleInlineKeydown(e, inputEl, recordId, fieldName, fieldType, colName) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    inputEl.blur();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    const cellEl = inputEl.closest('td');
+    if (cellEl && cellEl.dataset.origHtml) {
+      cellEl.innerHTML = cellEl.dataset.origHtml;
+      cellEl.classList.remove('cell-editing');
+    }
+    _activeInlineEditor = null;
+  }
+}
+
+async function saveInlineEdit(inputEl, recordId, fieldName, fieldType, colName) {
+  if (!_activeInlineEditor) return;
+  const cellEl = inputEl.closest('td');
+  _activeInlineEditor = null;
+
+  let rawVal = inputEl.value;
+  let parsedVal = rawVal;
+  if (fieldType === 'number') {
+    parsedVal = rawVal === '' ? null : Number(rawVal);
+  }
+
+  await saveInlineEditDirect(cellEl, recordId, fieldName, parsedVal, colName);
+}
+
+async function saveInlineEditDirect(cellEl, recordId, fieldName, val, colName) {
+  try {
+    const col = state.activeCollection;
+    const f = (col.schema || []).find(f => f.name === fieldName);
+    const updatedRec = await window.api.updateRecord(colName, recordId, { [fieldName]: val });
+    
+    // Update local state
+    const idx = state.records.findIndex(r => r.id === recordId);
+    if (idx !== -1) {
+      state.records[idx] = { ...state.records[idx], ...updatedRec };
+    }
+
+    if (cellEl) {
+      cellEl.classList.remove('cell-editing');
+      cellEl.classList.add('cell-flash-success');
+      cellEl.innerHTML = formatCellValue(val, f || { type: 'text', name: fieldName }, state.records[idx] || updatedRec, col);
+      setTimeout(() => cellEl.classList.remove('cell-flash-success'), 800);
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+    if (cellEl && cellEl.dataset.origHtml) {
+      cellEl.innerHTML = cellEl.dataset.origHtml;
+      cellEl.classList.remove('cell-editing');
+    }
+  }
+}
+
+// =========================================================
+// POWER FEATURE 2: Visual Filter & Query Builder
+// =========================================================
+state.showVisualFilter = false;
+state.visualFilterRules = [{ col: '', op: '=', val: '' }];
+state.visualFilterLogic = '&&';
+
+function toggleVisualFilter() {
+  state.showVisualFilter = !state.showVisualFilter;
+  const container = document.getElementById('visual-filter-container');
+  if (container) {
+    container.style.display = state.showVisualFilter ? 'block' : 'none';
+    if (state.showVisualFilter) renderVisualFilterBuilder();
+  }
+}
+
+function renderVisualFilterBuilder() {
+  const container = document.getElementById('visual-filter-container');
+  if (!container || !state.activeCollection) return;
+
+  const fields = state.activeCollection.schema || [];
+
+  container.innerHTML = `
+    <div class="filter-builder-card">
+      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; font-size:12.5px; color:#FFFFFF; display:flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+            Visual Filter Builder
+          </span>
+          <span style="font-size:11px; color:var(--text-muted);">Match</span>
+          <select class="input select" style="width:auto; padding:2px 8px; font-size:11.5px; height:24px;" onchange="state.visualFilterLogic = this.value; applyVisualFilter();">
+            <option value="&&" ${state.visualFilterLogic === '&&' ? 'selected' : ''}>ALL conditions (AND)</option>
+            <option value="||" ${state.visualFilterLogic === '||' ? 'selected' : ''}>ANY condition (OR)</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="addVisualFilterRule()">+ Add Condition</button>
+          <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="clearVisualFilters()">Clear All</button>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        ${state.visualFilterRules.map((rule, idx) => `
+          <div class="filter-rule-row">
+            <select class="input select" style="flex:1; min-width:140px; font-size:12px;" onchange="updateVisualFilterRule(${idx}, 'col', this.value)">
+              <option value="">-- Select Column --</option>
+              ${fields.map(f => `<option value="${f.name}" ${rule.col === f.name ? 'selected' : ''}>${f.name} (${f.type})</option>`).join('')}
+            </select>
+
+            <select class="input select" style="width:130px; font-size:12px;" onchange="updateVisualFilterRule(${idx}, 'op', this.value)">
+              <option value="=" ${rule.op === '=' ? 'selected' : ''}>equals (=)</option>
+              <option value="!=" ${rule.op === '!=' ? 'selected' : ''}>not equal (!=)</option>
+              <option value="~" ${rule.op === '~' ? 'selected' : ''}>contains (~)</option>
+              <option value=">" ${rule.op === '>' ? 'selected' : ''}>greater than (&gt;)</option>
+              <option value=">=" ${rule.op === '>=' ? 'selected' : ''}>greater or equal (&ge;)</option>
+              <option value="<" ${rule.op === '<' ? 'selected' : ''}>less than (&lt;)</option>
+              <option value="<=" ${rule.op === '<=' ? 'selected' : ''}>less or equal (&le;)</option>
+            </select>
+
+            <input type="text" class="input" style="flex:1.5; min-width:160px; font-size:12px;" placeholder="Filter value..." value="${escapeHtml(rule.val)}" oninput="updateVisualFilterRule(${idx}, 'val', this.value)" />
+
+            <button class="btn-icon" style="color:var(--accent-rose); width:24px; height:24px;" onclick="removeVisualFilterRule(${idx})" title="Remove condition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+        <div style="font-size:11.5px; color:var(--text-dim); font-family:var(--font-mono);">
+          Compiled query: <code style="color:#38BDF8;">${escapeHtml(compileVisualFilterQuery() || 'None')}</code>
+        </div>
+        <button class="btn btn-primary" style="padding:4px 14px; font-size:12px; font-weight:600;" onclick="applyVisualFilter()">Apply Filter</button>
+      </div>
+    </div>
+  `;
+}
+
+function addVisualFilterRule() {
+  state.visualFilterRules.push({ col: '', op: '=', val: '' });
+  renderVisualFilterBuilder();
+}
+
+function removeVisualFilterRule(idx) {
+  state.visualFilterRules.splice(idx, 1);
+  if (state.visualFilterRules.length === 0) {
+    state.visualFilterRules.push({ col: '', op: '=', val: '' });
+  }
+  renderVisualFilterBuilder();
+  applyVisualFilter();
+}
+
+function updateVisualFilterRule(idx, key, val) {
+  if (state.visualFilterRules[idx]) {
+    state.visualFilterRules[idx][key] = val;
+  }
+}
+
+function compileVisualFilterQuery() {
+  const validRules = state.visualFilterRules.filter(r => r.col && r.val !== '');
+  if (validRules.length === 0) return '';
+  return validRules.map(r => {
+    const isNum = !isNaN(Number(r.val)) && r.val.trim() !== '';
+    const formattedVal = isNum ? r.val : `'${r.val.replace(/'/g, "\\'")}'`;
+    return `${r.col} ${r.op} ${formattedVal}`;
+  }).join(` ${state.visualFilterLogic} `);
+}
+
+function applyVisualFilter() {
+  const compiled = compileVisualFilterQuery();
+  state.filterQuery = compiled;
+  state.page = 1;
+  const filterInput = document.getElementById('records-filter-input');
+  if (filterInput) filterInput.value = compiled;
+  loadRecords();
+}
+
+function clearVisualFilters() {
+  state.visualFilterRules = [{ col: '', op: '=', val: '' }];
+  state.filterQuery = '';
+  state.page = 1;
+  const filterInput = document.getElementById('records-filter-input');
+  if (filterInput) filterInput.value = '';
+  renderVisualFilterBuilder();
+  loadRecords();
+}
+
+// =========================================================
+// POWER FEATURE 3: 1-Click CSV / Excel / JSON Bulk Import
+// =========================================================
+let _importParsedData = [];
+let _importColumnMapping = {};
+
+function openImportModal() {
+  const col = state.activeCollection;
+  if (!col) return;
+
+  _importParsedData = [];
+  _importColumnMapping = {};
+
+  const bodyHtml = `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div id="import-drop-area" class="import-dropzone" ondragover="event.preventDefault(); this.classList.add('dragover');" ondragleave="this.classList.remove('dragover');" ondrop="handleImportDrop(event)" onclick="document.getElementById('import-file-input').click();">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.75" style="margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        <div style="font-weight:700; font-size:14px; color:#FFFFFF;">Drag & drop your CSV or JSON file here</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Supports <code>.csv</code>, <code>.json</code>, <code>.tsv</code> with automatic column detection</div>
+        <input type="file" id="import-file-input" accept=".csv,.json,.tsv,.txt" style="display:none;" onchange="handleImportFileSelect(this.files[0])" />
+      </div>
+
+      <div id="import-preview-section" style="display:none; flex-direction:column; gap:12px;">
+        <div style="font-size:13px; font-weight:700; color:#FFFFFF; display:flex; align-items:center; justify-content:space-between;">
+          <span>Column Matching & Preview (<span id="import-row-count">0</span> rows detected)</span>
+          <span class="cell-badge mono" id="import-file-name"></span>
+        </div>
+
+        <div id="import-mappings-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px; background:#0B0E14; padding:12px; border-radius:8px; border:1px solid var(--border-subtle);">
+        </div>
+
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted);">Preview (First 5 Rows):</div>
+        <div id="import-table-preview" style="max-height:160px; overflow:auto; border:1px solid var(--border-default); border-radius:6px; background:#0A0D12;">
+        </div>
+
+        <div id="import-progress-bar-container" style="display:none; flex-direction:column; gap:4px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-muted);">
+            <span>Importing records...</span>
+            <span id="import-progress-text">0%</span>
+          </div>
+          <div style="height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;">
+            <div id="import-progress-fill" style="width:0%; height:100%; background:#10B981; transition:width 0.2s ease;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const footerHtml = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button id="execute-import-btn" class="btn btn-primary" style="display:none;" onclick="executeBatchImport()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      <span>Import Records</span>
+    </button>
+  `;
+
+  openModal(`Import Data into "${escapeHtml(col.name)}"`, bodyHtml, footerHtml);
+}
+
+function handleImportDrop(e) {
+  e.preventDefault();
+  const dropArea = document.getElementById('import-drop-area');
+  if (dropArea) dropArea.classList.remove('dragover');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    handleImportFileSelect(e.dataTransfer.files[0]);
+  }
+}
+
+function handleImportFileSelect(file) {
+  if (!file) return;
+  const fileNameEl = document.getElementById('import-file-name');
+  if (fileNameEl) fileNameEl.textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    if (file.name.endsWith('.json')) {
+      try {
+        const json = JSON.parse(text);
+        _importParsedData = Array.isArray(json) ? json : (json.items || [json]);
+        renderImportPreview(Object.keys(_importParsedData[0] || {}));
+      } catch (err) {
+        showToast('Invalid JSON file: ' + err.message, 'error');
+      }
+    } else {
+      // Parse CSV / TSV
+      parseCSVData(text, file.name.endsWith('.tsv') ? '\t' : ',');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCSVData(text, delimiter = ',') {
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (lines.length === 0) {
+    showToast('CSV file is empty', 'error');
+    return;
+  }
+
+  const parseLine = (line) => {
+    const values = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"' && (i === 0 || line[i-1] !== '\\')) {
+        inQuotes = !inQuotes;
+      } else if (char === delimiter && !inQuotes) {
+        values.push(cur.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        cur = '';
+      } else {
+        cur += char;
+      }
+    }
+    values.push(cur.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+    return values;
+  };
+
+  const headers = parseLine(lines[0]);
+  _importParsedData = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const rowValues = parseLine(lines[i]);
+    if (rowValues.length === 0 || (rowValues.length === 1 && !rowValues[0])) continue;
+    const rowObj = {};
+    headers.forEach((h, hIdx) => {
+      rowObj[h] = rowValues[hIdx] !== undefined ? rowValues[hIdx] : '';
+    });
+    _importParsedData.push(rowObj);
+  }
+
+  renderImportPreview(headers);
+}
+
+function renderImportPreview(csvHeaders) {
+  const previewSection = document.getElementById('import-preview-section');
+  const dropArea = document.getElementById('import-drop-area');
+  const rowCountEl = document.getElementById('import-row-count');
+  const mappingsGrid = document.getElementById('import-mappings-grid');
+  const tablePreview = document.getElementById('import-table-preview');
+  const executeBtn = document.getElementById('execute-import-btn');
+
+  if (!previewSection || !dropArea) return;
+
+  dropArea.style.display = 'none';
+  previewSection.style.display = 'flex';
+  if (rowCountEl) rowCountEl.textContent = _importParsedData.length;
+  if (executeBtn) executeBtn.style.display = 'inline-flex';
+
+  const col = state.activeCollection;
+  const targetFields = col.schema || [];
+
+  _importColumnMapping = {};
+
+  mappingsGrid.innerHTML = targetFields.map(tf => {
+    // Auto-match if CSV header matches table field name
+    const matchedHeader = csvHeaders.find(h => h.toLowerCase() === tf.name.toLowerCase()) || '';
+    _importColumnMapping[tf.name] = matchedHeader;
+
+    return `
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; color:var(--text-muted); font-weight:600;">${tf.name} (${tf.type})</label>
+        <select class="input select" style="font-size:11.5px; padding:4px;" onchange="_importColumnMapping['${tf.name}'] = this.value; updateImportTablePreview();">
+          <option value="">-- Don't Import --</option>
+          ${csvHeaders.map(h => `<option value="${escapeHtml(h)}" ${h === matchedHeader ? 'selected' : ''}>${escapeHtml(h)}</option>`).join('')}
+        </select>
+      </div>
+    `;
+  }).join('');
+
+  updateImportTablePreview();
+}
+
+function updateImportTablePreview() {
+  const tablePreview = document.getElementById('import-table-preview');
+  if (!tablePreview) return;
+
+  const col = state.activeCollection;
+  const targetFields = (col.schema || []).filter(tf => _importColumnMapping[tf.name]);
+  const previewRows = _importParsedData.slice(0, 5);
+
+  tablePreview.innerHTML = `
+    <table style="width:100%; border-collapse:collapse; font-size:11px; text-align:left;">
+      <thead>
+        <tr style="background:#12151D; border-bottom:1px solid rgba(255,255,255,0.08);">
+          ${targetFields.map(tf => `<th style="padding:6px 10px; color:var(--text-dim); font-weight:600;">${escapeHtml(tf.name)}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${previewRows.map(row => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            ${targetFields.map(tf => {
+              const srcKey = _importColumnMapping[tf.name];
+              const val = row[srcKey] !== undefined ? row[srcKey] : '';
+              return `<td style="padding:6px 10px; color:var(--text-main);">${escapeHtml(String(val))}</td>`;
+            }).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function executeBatchImport() {
+  const col = state.activeCollection;
+  if (!col || _importParsedData.length === 0) return;
+
+  const targetFields = col.schema || [];
+  const mappedPairs = Object.entries(_importColumnMapping).filter(([_, srcKey]) => srcKey);
+
+  if (mappedPairs.length === 0) {
+    showToast('Please map at least one column to import', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('execute-import-btn');
+  const progressContainer = document.getElementById('import-progress-bar-container');
+  const progressText = document.getElementById('import-progress-text');
+  const progressFill = document.getElementById('import-progress-fill');
+
+  if (btn) btn.disabled = true;
+  if (progressContainer) progressContainer.style.display = 'flex';
+
+  const total = _importParsedData.length;
+  let importedCount = 0;
+  const batchSize = 50;
+
+  try {
+    for (let i = 0; i < total; i += batchSize) {
+      const chunk = _importParsedData.slice(i, i + batchSize);
+      const requests = chunk.map(row => {
+        const payload = {};
+        mappedPairs.forEach(([targetField, srcKey]) => {
+          let val = row[srcKey];
+          const tf = targetFields.find(f => f.name === targetField);
+          if (tf?.type === 'number') {
+            val = val === '' ? null : Number(val);
+          } else if (tf?.type === 'bool') {
+            val = Boolean(val === true || val === 'true' || val === '1' || val === 1);
+          }
+          payload[targetField] = val;
+        });
+        return {
+          method: 'POST',
+          url: `/api/collections/${col.name}/records`,
+          body: payload,
+        };
+      });
+
+      await window.api.batch(requests);
+      importedCount += chunk.length;
+
+      const pct = Math.min(100, Math.round((importedCount / total) * 100));
+      if (progressText) progressText.textContent = `${pct}% (${importedCount}/${total})`;
+      if (progressFill) progressFill.style.width = `${pct}%`;
+    }
+
+    showToast(`Successfully imported ${importedCount} records into "${col.name}"!`, 'success');
+    closeModal();
+    loadRecords();
+  } catch (err) {
+    showToast('Import error: ' + err.message, 'error');
+    if (btn) btn.disabled = false;
+  }
+}
+
+// =========================================================
+// POWER FEATURE 4: Instant "Connect App" Code Generator
+// =========================================================
+function openConnectAppModal() {
+  const col = state.activeCollection;
+  if (!col) return;
+
+  const origin = _tunnelState.active && _tunnelState.url ? _tunnelState.url : window.location.origin;
+  const colName = col.name;
+  const fields = col.schema || [];
+
+  const sampleObj = {};
+  fields.forEach(f => {
+    if (f.type === 'number') sampleObj[f.name] = 42;
+    else if (f.type === 'bool') sampleObj[f.name] = true;
+    else if (f.type === 'select') sampleObj[f.name] = f.options?.values?.[0] || 'sample';
+    else sampleObj[f.name] = `Sample ${f.name}`;
+  });
+
+  const flutterCode = `// MiniBase Flutter (Dart) Client
+// 1. In pubspec.yaml add: http: ^1.2.0
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class MiniBaseClient {
+  static const String baseUrl = '${origin}';
+
+  // 1. Fetch Records
+  static Future<List<dynamic>> get${colName[0].toUpperCase() + colName.slice(1)}() async {
+    final res = await http.get(Uri.parse('$baseUrl/api/collections/${colName}/records'));
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return data['items'];
+    }
+    throw Exception('Failed to load records: ${res.body}');
+  }
+
+  // 2. Create Record
+  static Future<Map<String, dynamic>> createRecord(Map<String, dynamic> data) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/collections/${colName}/records'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    return jsonDecode(res.body);
+  }
+}`;
+
+  const jsCode = `// MiniBase JavaScript / React / Next.js
+const BASE_URL = '${origin}';
+
+// 1. Fetch Records
+async function get${colName[0].toUpperCase() + colName.slice(1)}() {
+  const res = await fetch(BASE_URL + '/api/collections/${colName}/records?sort=-created');
+  const data = await res.json();
+  return data.items;
+}
+
+// 2. Create Record
+async function createRecord() {
+  const res = await fetch(BASE_URL + '/api/collections/${colName}/records', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(${JSON.stringify(sampleObj, null, 2)}),
+  });
+  return res.json();
+}
+
+// 3. Realtime SSE Live Stream
+const sse = new EventSource(BASE_URL + '/api/realtime');
+sse.addEventListener('${colName}', (e) => {
+  const event = JSON.parse(e.data);
+  console.log('Realtime change:', event.action, event.record);
+});`;
+
+  const pythonCode = `# MiniBase Python Integration
+import requests
+
+BASE_URL = '${origin}'
+
+# 1. Fetch Records
+res = requests.get(f'{BASE_URL}/api/collections/${colName}/records')
+records = res.json().get('items', [])
+print(f'Fetched {len(records)} records')
+
+# 2. Create Record
+new_rec = requests.post(
+    f'{BASE_URL}/api/collections/${colName}/records',
+    json=${JSON.stringify(sampleObj, null, 2)}
+).json()
+print('Created:', new_rec)`;
+
+  const curlCode = `# 1. List Records
+curl -X GET "${origin}/api/collections/${colName}/records"
+
+# 2. Create Record
+curl -X POST "${origin}/api/collections/${colName}/records" \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(sampleObj)}'`;
+
+  window.__connectSnippets = { flutter: flutterCode, js: jsCode, python: pythonCode, curl: curlCode };
+
+  const bodyHtml = `
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:8px; font-size:12.5px; color:#E2E8F0;">
+        <div>API Endpoint: <code style="color:#38BDF8; font-weight:700;">${origin}/api/collections/${colName}/records</code></div>
+        <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="copyToClipboard('${origin}/api/collections/${colName}/records')">Copy URL</button>
+      </div>
+
+      <div class="connect-tabs">
+        <button class="connect-tab-btn active" onclick="switchConnectTab('flutter', this)">Flutter (Dart)</button>
+        <button class="connect-tab-btn" onclick="switchConnectTab('js', this)">JavaScript / React</button>
+        <button class="connect-tab-btn" onclick="switchConnectTab('python', this)">Python</button>
+        <button class="connect-tab-btn" onclick="switchConnectTab('curl', this)">cURL / CLI</button>
+      </div>
+
+      <div id="connect-code-pane" style="position:relative;">
+        <pre class="code-box" id="connect-code-content" style="max-height:280px; margin:0; font-size:12px;">${escapeHtml(flutterCode)}</pre>
+        <button class="btn btn-secondary" onclick="copyConnectCode()" style="position:absolute; top:8px; right:8px; padding:4px 10px; font-size:11px; background:#121620;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span id="copy-code-btn-text">Copy Code</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  openModal(`Connect App to "${escapeHtml(colName)}"`, bodyHtml, '<button class="btn btn-primary" onclick="closeModal()">Done</button>');
+}
+
+function switchConnectTab(lang, btn) {
+  document.querySelectorAll('.connect-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const codeContent = document.getElementById('connect-code-content');
+  if (codeContent && window.__connectSnippets[lang]) {
+    codeContent.textContent = window.__connectSnippets[lang];
+  }
+}
+
+function copyConnectCode() {
+  const codeContent = document.getElementById('connect-code-content');
+  if (!codeContent) return;
+  copyToClipboard(codeContent.textContent, 'Code copied to clipboard!');
+  const btnText = document.getElementById('copy-code-btn-text');
+  if (btnText) {
+    btnText.textContent = 'Copied!';
+    setTimeout(() => { btnText.textContent = 'Copy Code'; }, 2000);
+  }
+}
+
+// =========================================================
+// POWER FEATURE 5: 1-Click Backup Export & Restore
+// =========================================================
+async function downloadDatabaseBackup() {
+  try {
+    showToast('Generating complete database backup...', 'info');
+    const backup = await window.api.exportBackup();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `minibase_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Database backup downloaded successfully!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function triggerBackupRestore() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const backup = JSON.parse(ev.target.result);
+        if (!backup.collections || !backup.data) {
+          throw new Error('Invalid MiniBase backup format');
+        }
+        if (confirm(`Restore backup from ${backup.exportedAt || 'archive'}? This will sync ${backup.collections.length} tables and all records.`)) {
+          showToast('Restoring database backup...', 'info');
+          const res = await window.api.restoreBackup(backup);
+          showToast(`Restored ${res.collectionsCount} collections successfully!`, 'success');
+          setTimeout(() => window.location.reload(), 800);
+        }
+      } catch (err) {
+        showToast('Restore failed: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
 function renderAppLayout() {
   const app = document.getElementById('app');
   if (!app) return;
@@ -2118,7 +2818,7 @@ function renderRecordsContent(col, fields) {
               <td style="padding:9px 12px;"><strong>${escapeHtml(rec.email || '')}</strong></td>
               <td style="padding:9px 12px;">${rec.verified ? '<span class="cell-bool-true">✓ Yes</span>' : '<span class="cell-bool-false">✗ No</span>'}</td>
             ` : ''}
-            ${fields.map(f => `<td style="padding:9px 12px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${formatCellValue(rec[f.name], f, rec, col)}</td>`).join('')}
+            ${fields.map(f => `<td class="cell-editable" data-col="${f.name}" data-id="${rec.id}" data-type="${f.type}" onclick="event.stopPropagation();" ondblclick="startInlineEdit(this, '${rec.id}', '${f.name}', '${f.type}', '${col.name}')" title="Double-click to edit inline" style="padding:9px 12px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${formatCellValue(rec[f.name], f, rec, col)}</td>`).join('')}
             <td style="padding:9px 12px; color:var(--text-secondary); font-size:11.5px;" class="mono">${formatDate(rec.created)}</td>
             <td style="padding:9px 12px; text-align:right; white-space:nowrap;">
               <button class="btn-icon" onclick="event.stopPropagation(); viewRecordDetails('${rec.id}')" title="View Record Details" style="color:var(--accent-cyan);">
@@ -2246,6 +2946,7 @@ function renderRecordsTable() {
           </div>
         </div>
 
+        <div id="visual-filter-container" style="display:none; padding:10px 14px 0;"></div>
         <!-- Scrollable Table Grid / Empty State -->
         <div id="records-scroll-container" class="table-scroll" style="flex:1; overflow:auto;">
           ${renderRecordsContent(col, fields)}

@@ -244,6 +244,26 @@ class AdminAPI {
     });
   }
 
+  // Backup & Disaster Recovery
+  async exportBackup() {
+    return this.request('/api/admins/backup/export');
+  }
+
+  async restoreBackup(backup) {
+    return this.request('/api/admins/backup/restore', {
+      method: 'POST',
+      body: JSON.stringify({ backup }),
+    });
+  }
+
+  // Batch Operations
+  async batch(requests) {
+    return this.request('/api/batch', {
+      method: 'POST',
+      body: JSON.stringify({ requests }),
+    });
+  }
+
   // Public Tunnel
   async getTunnelStatus() {
     return this.request('/api/tunnel');
