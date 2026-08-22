@@ -1296,9 +1296,10 @@ function renderAppLayout() {
       <div class="topbar">
         <div class="topbar-left">
           <div id="topbar-title-section" class="topbar-title">Dashboard</div>
-          <button id="public-tunnel-btn" class="btn btn-sm" onclick="openTunnelModal()" style="display:inline-flex; align-items:center; gap:6px; font-size:11px; padding:3px 9px; border-radius:var(--radius-pill); background:var(--accent-cyan-soft); border:1px solid rgba(56,189,248,0.3); color:var(--accent-cyan); font-weight:600;">
-            <span style="width:6px; height:6px; border-radius:50%; background:var(--accent-cyan); box-shadow:0 0 6px var(--accent-cyan);"></span>
-            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:3px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Public Link</span>
+          <button id="public-tunnel-btn" class="tunnel-status-pill" onclick="openTunnelModal()" title="Cloudflare Live Tunnel Active" style="display:none;">
+            <span class="tunnel-pulse"></span>
+            <span class="tunnel-label">Live Tunnel</span>
+            <svg class="tunnel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
           </button>
         </div>
         <div class="topbar-right" id="topbar-actions">

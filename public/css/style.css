@@ -198,6 +198,58 @@ body::before {
   font-family: var(--font-mono);
 }
 
+.tunnel-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.12s cubic-bezier(0.2, 0, 0, 1);
+  user-select: none;
+}
+
+.tunnel-status-pill:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-strong);
+  color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.tunnel-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  box-shadow: 0 0 6px var(--brand-primary);
+  flex-shrink: 0;
+}
+
+.tunnel-label {
+  font-size: 11px;
+  letter-spacing: -0.01em;
+  font-family: var(--font-mono);
+}
+
+.tunnel-icon {
+  width: 11px;
+  height: 11px;
+  opacity: 0.6;
+  transition: opacity 0.12s ease;
+  flex-shrink: 0;
+}
+
+.tunnel-status-pill:hover .tunnel-icon {
+  opacity: 1;
+  color: var(--brand-primary);
+}
+
 .pulse-dot {
   width: 5px;
   height: 5px;
