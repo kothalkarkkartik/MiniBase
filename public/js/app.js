@@ -1299,7 +1299,6 @@ function renderAppLayout() {
         </div>
         <div style="display:flex; align-items:center; gap:4px;">
           <div class="status-badge">
-            <span class="pulse-dot"></span>
             <span>v1.0</span>
           </div>
           <button class="btn-icon" onclick="toggleSidebar()" title="Collapse Menu (Ctrl+B)" style="width:24px; height:24px; color:var(--text-dim);">
