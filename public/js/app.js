@@ -352,6 +352,49 @@ function closeDrawer() {
   if (drawer) drawer.remove();
 }
 
+let _tunnelState = { active: false, url: null };
+
+async function checkTunnelStatus() {
+  try {
+    const res = await fetch('/api/tunnel').then(r => r.json()).catch(() => ({ active: false }));
+    _tunnelState = res || { active: false, url: null };
+    const btn = document.getElementById('public-tunnel-btn');
+    if (btn) {
+      if (_tunnelState.active && _tunnelState.url) {
+        btn.style.display = 'inline-flex';
+        btn.title = 'Tunnel Active: ' + _tunnelState.url;
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+  } catch {}
+}
+
+function openTunnelModal() {
+  const origin = (_tunnelState.active && _tunnelState.url) ? _tunnelState.url : window.location.origin;
+  const isTunnel = Boolean(_tunnelState.active && _tunnelState.url);
+
+  const bodyHtml = `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div style="padding:14px; background:var(--bg-surface-elevated); border:1px solid var(--border-default); border-radius:var(--radius-sm);">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:${isTunnel ? 'var(--brand-primary)' : 'var(--text-dim)'}; box-shadow:${isTunnel ? '0 0 8px var(--brand-primary)' : 'none'};"></span>
+          <strong style="font-size:13px; color:var(--text-main);">${isTunnel ? 'Public Cloudflare Tunnel Active' : 'Localhost Only'}</strong>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">
+          ${isTunnel ? 'Your MiniBase backend is accessible worldwide on this live URL. Use this link in your Flutter or mobile apps.' : 'MiniBase is currently running only on your local network.'}
+        </div>
+        <div style="margin-top:12px; display:flex; align-items:center; gap:8px;">
+          <input type="text" class="input mono" style="flex:1; font-size:12px;" value="${origin}" readonly />
+          <button class="btn btn-secondary" onclick="copyToClipboard('${origin}')">Copy Link</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  openModal('Public Tunnel Status', bodyHtml, '<button class="btn btn-secondary" onclick="closeModal()">Close</button>');
+}
+
 // App Initialization
 async function initApp() {
   checkTunnelStatus();
@@ -646,7 +689,7 @@ function burstBubble(speech) {
 function showDuckThought() {
   const speech = document.getElementById('duck-speech');
   const wrapper = document.getElementById('duck-interactive-wrapper');
-  if (!speech) return;
+  if (!speech || !speech.classList) return;
 
   // Don't overwrite if duck is currently showing a roast or in rage mode
   if (speech.classList.contains('roast-mode') || window._isDuckRaging) return;
