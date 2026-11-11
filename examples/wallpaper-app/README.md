@@ -42,3 +42,4 @@ This application demonstrates the four core superpowers of MiniBase:
 When MiniBase is running (`node bin/minibase.js serve`), the demo app is mounted automatically at:
 
 👉 **`http://localhost:8090/demo`** (also accessible via `/app` or `/wallpapers`)
+
