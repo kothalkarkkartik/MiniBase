@@ -1,7 +1,7 @@
 {
   "name": "minibase",
   "version": "1.0.0",
-  "description": "Ultra-lightweight, zero-config, open-source Backend-as-a-Service (BaaS) with embedded SQLite",
+  "description": "Embedded Backend-as-a-Service (BaaS) with SQLite in Node.js",
   "type": "module",
   "main": "src/index.js",
   "bin": {
@@ -24,7 +24,7 @@
     "auth",
     "database"
   ],
-  "author": "MiniBase Team",
+  "author": "Kartik Kothalkar",
   "license": "MIT",
   "dependencies": {
     "@ngrok/ngrok": "^1.7.0",

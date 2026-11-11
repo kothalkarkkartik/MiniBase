@@ -1,120 +1,92 @@
 <div align="center">
 
-<img src="minibase-logo.png" alt="MiniBase Logo" width="120" height="120" style="border-radius:24px; margin-bottom:12px;" />
+<img src="minibase-logo.png" alt="MiniBase Logo" width="100" height="100" style="border-radius:20px; margin-bottom:12px;" />
 
-# ⚡ MiniBase
-### Ultra-Lightweight, Zero-Config Backend-as-a-Service (BaaS) with Embedded SQLite
+# MiniBase
 
-[![Node.js](https://img.shields.io/badge/Node.js-22+-68a063?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS_|_Docker-8A2BE2?style=for-the-badge)](https://github.com/kothalkarkkartik/MiniBase)
-[![License](https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge)](LICENSE)
+**Lightweight embedded Backend-as-a-Service (BaaS) for Node.js and SQLite.**
 
-An open-source, ultra-fast **Firebase & PocketBase alternative** built natively with Node.js & SQLite (WAL Mode). Zero external database servers required. Memory footprint: **~35MB RAM**.
+[![Node.js](https://img.shields.io/badge/Node.js-22+-68a063.svg?style=flat-square)](https://nodejs.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57.svg?style=flat-square)](https://www.sqlite.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-[🚀 Quick Start](#-quick-start-options) • [⚖️ MiniBase vs Firebase](#-minibase-vs-firebase-when-to-use-which) • [🖼️ Demo App](#️-included-client-demo-app-wallvibe-4k) • [📖 Complete Guide](#-how-to-use-minibase-complete-guide) • [💻 CLI Suite](#-universal-terminal-cli-suite-minibase) • [🌐 REST API](#-rest-api-cheatsheet)
+[Quick Start](#quick-start) • [Why MiniBase?](#why-minibase-comparison-with-firebase) • [Features](#features) • [CLI Reference](#cli-reference) • [REST API](#rest-api) • [Client Examples](#client-examples)
 
 ---
-
-### 📸 Visual Showcase
-
-| 🖼️ Live 4K Client Demo (`/demo`) | 💻 Sleek Dark Admin Studio (`/_/`) |
-|:---:|:---:|
-| <img src="screenshots/08_wallpaper_app_client.png" width="480" alt="Wallpaper Demo App" /> | <img src="screenshots/02_admin_studio_dashboard.png" width="480" alt="Admin Studio Dashboard" /> |
-
-| ⚡ Terminal CLI Suite | 📖 Interactive API Docs (`/docs`) |
-|:---:|:---:|
-| <img src="screenshots/07_terminal_cli_suite.png" width="480" alt="MiniBase CLI Suite" /> | <img src="screenshots/05_interactive_api_docs.png" width="480" alt="Interactive OpenAPI Docs" /> |
 
 </div>
 
+MiniBase is an embedded Backend-as-a-Service built on Node 22's native `node:sqlite` engine in WAL mode. It bundles automated REST APIs, real-time Server-Sent Events (SSE), file storage, and an administrative dashboard into a single process with zero external database servers to configure.
+
+Designed for side projects, MVPs, internal tooling, and local-first apps where running and paying for separate database servers is unnecessary.
+
 ---
 
-## ⚖️ MiniBase vs Firebase (When to Use Which?)
+## Overview
 
-Firebase is an exceptional cloud platform for massive, multi-region distributed enterprise applications. But for MVPs, indie projects, internal tools, and developers who prioritize complete data ownership and local-first simplicity, **MiniBase** provides an ultra-fast, zero-config, self-hosted alternative.
+<div align="center">
+  <img src="screenshots/02_admin_studio_dashboard.png" alt="MiniBase Admin Studio" width="100%" />
+</div>
 
-| Feature | 🔥 Firebase | ⚡ MiniBase |
+<details>
+<summary><strong>View additional screenshots</strong> (Client Demo, CLI, API Docs, Importer)</summary>
+<br />
+
+| Demo Client App (`/demo`) | Interactive API Docs (`/docs`) |
+|:---:|:---:|
+| <img src="screenshots/08_wallpaper_app_client.png" width="480" alt="Demo App" /> | <img src="screenshots/05_interactive_api_docs.png" width="480" alt="API Docs" /> |
+
+| Terminal CLI Suite | CSV / JSON Importer |
+|:---:|:---:|
+| <img src="screenshots/07_terminal_cli_suite.png" width="480" alt="CLI Suite" /> | <img src="screenshots/04_import_export_modal.png" width="480" alt="CSV Import" /> |
+
+</details>
+
+---
+
+## Why MiniBase? (Comparison with Firebase)
+
+Firebase popularized rapid backend development through real-time syncing and managed auth. However, managing cloud consoles, usage-based pricing, and proprietary document queries can add friction for smaller teams and independent developers.
+
+MiniBase brings the same rapid-backend workflow to a self-hosted, single-file SQLite database.
+
+| Dimension | Firebase | MiniBase |
 |---|---|---|
-| **Primary Architecture** | Managed Google Cloud Platform (Multi-tenant) | **Single-binary, 100% Self-Hosted (Node.js + SQLite)** |
-| **Data Ownership** | Stored in Google Cloud | **100% Yours in a single portable file (`data.db`)** |
-| **Database Engine** | Proprietary Firestore / Realtime DB (NoSQL) | **Native SQLite WAL (ACID compliant, microsecond latency)** |
-| **Cost & Billing** | Pay per document read/write/bandwidth | **$0 / Run anywhere on a $5 VPS, Docker, or Raspberry Pi** |
-| **Setup & Local Dev** | Emulators, service account keys, cloud configs | **1 Command (`minibase serve`) with zero config** |
-| **Realtime Updates** | Proprietary WebSockets & Client SDKs | **Standard Server-Sent Events (SSE) with standard HTTP** |
-| **Admin Interface** | Google Cloud Console | **Built-in Dark Glassmorphic Admin Studio** |
-| **CLI & Raw SQL** | Limited CLI query tools | **Built-in `minibase sql` raw query runner & backup suite** |
-| **Data Portability** | Complex cloud export workflows | **1-Click RFC 4180 CSV / JSON bulk import & export** |
-| **API Documentation** | Manual docs or Google documentation | **Instant interactive OpenAPI 3.0 documentation (`/docs`)** |
+| Architecture | Managed multi-tenant cloud | Single-process self-hosted |
+| Database | Firestore / Realtime DB (NoSQL) | SQLite WAL (ACID relational) |
+| Data ownership | Hosted by Google Cloud | Single local file (`data.db`) |
+| Cost | Pay-per-operation & bandwidth | Free / Self-hosted on any host |
+| Real-time | WebSocket protocol | Server-Sent Events (SSE) |
+| Local workflow | Cloud emulators & service keys | Run directly with `minibase serve` |
+| Querying | Firestore Query API | REST filters & direct SQL CLI |
+| API Docs | Google documentation | Auto-generated OpenAPI 3.0 (`/docs`) |
 
-### 🎯 When should you choose Firebase?
-- You are building an enterprise app requiring multi-region data replication across continents.
-- You rely heavily on deep Google Cloud ecosystem integrations (BigQuery, Cloud Functions, Google Analytics).
-- You need managed phone number authentication or push notification services (FCM) out of the box.
-
-### 🎯 When should you choose MiniBase?
-- You want **100% data ownership** without vendor lock-in or surprise monthly usage bills.
-- You love the speed and simplicity of **SQLite WAL** (microsecond queries, single-file backup).
-- You want an **instant backend** for your Flutter, React, Vue, Svelte, or Python project in under 10 seconds.
-- You want a lightweight solution that runs effortlessly on local machines, private servers, Docker, or edge hardware with a ~35MB RAM footprint.
+### When to choose which:
+- **Choose Firebase** if you need global multi-region replication, managed push notifications (FCM), or deep Google Cloud ecosystem integrations.
+- **Choose MiniBase** if you want full data ownership, predictable $0 hosting, microsecond SQLite queries, and a self-contained backend running on a VPS or local machine with ~35MB RAM footprint.
 
 ---
 
-## 🖼️ Included Client Demo App: WallVibe 4K
+## Features
 
-MiniBase ships with a full demo client application in [`examples/wallpaper-app`](examples/wallpaper-app) to showcase end-to-end integration:
-
-- **Live URL**: `http://localhost:8090/demo` (or `/app` / `/wallpapers`)
-- **Key Capabilities Demonstrated**:
-  - **Native File Streaming**: Streams high-definition 4K images directly from MiniBase file storage (`/api/files/wallpapers/:id/:file`).
-  - **Live Server-Sent Events (SSE)**: Download counters and record updates sync across all connected clients in real-time.
-  - **Dynamic Filtering & Search**: Instant category-based queries (`Nature`, `Abstract`, `Architecture`) and debounced search.
-  - **Engine Telemetry**: Visual glass bar showing real-time SQLite WAL status, active collection counts, and endpoint mappings.
-
----
-
-## ✨ Key Highlights
-
-- 🚀 **Zero-Config Embedded SQLite**: Instant startup with WAL mode (`journal_mode=WAL`) for high concurrency and supersonic performance.
-- 🎨 **PocketBase-Inspired Dark Studio**: Ultra-sleek, responsive DevTools dark dashboard with schema builder, records grid, live filters, and system logs.
-- ✏️ **Inline Cell Editing (Excel/Notion Style)**: Double-click any table cell to edit numbers, text, or booleans inline with instant database autosave.
-- 📥 **1-Click CSV / JSON Bulk Importer**: Drag-and-drop any `.csv` or `.json` file to auto-detect columns and bulk-insert thousands of rows in milliseconds.
-- 🔍 **Visual Filter Builder**: Build complex query filters visually (`[ Category ] [ is equal to ] [ Nature ]`) without syntax confusion.
-- 📱 **Instant "Connect App" Code Generator**: Copy-paste live code snippets for **Flutter (Dart)**, **React / Next.js (JS)**, **Python**, and **cURL**.
-- ⚡ **Realtime Subscriptions**: Built-in Server-Sent Events (SSE) live stream for instant push updates to mobile and web apps.
-- 📖 **Interactive OpenAPI Documentation**: Built-in Scalar interactive API explorer mounted at `/docs`.
-- 🔒 **User Authentication & Granular API Rules**: Password hashing with Scrypt, JWT auth, and customizable access rules per collection.
-- 🌐 **Built-in Cloudflare Live Tunnel**: 1-click free public HTTPS URL (`--tunnel`) to test mobile and web apps worldwide with zero router/DNS config.
-- 💾 **1-Click Database Disaster Recovery**: Full database export archive and instant drag-and-drop restore.
+- **Embedded SQLite Engine**: Runs on Node 22's native `node:sqlite` in WAL mode for concurrent reads/writes and microsecond query latency.
+- **Automated REST APIs**: Dynamic endpoints generated for each collection schema with filtering, sorting, pagination, and relation expansion.
+- **Real-time Event Streaming**: Native Server-Sent Events (SSE) push database changes live to frontend clients without WebSocket overhead.
+- **Admin Studio**: Dark-mode web interface to design schemas, manage permissions, and inspect or edit records inline.
+- **Terminal CLI**: Global `minibase` CLI to inspect health, manage admins, run raw SQL queries, and manage hot backups.
+- **Interactive API Documentation**: Live OpenAPI 3.0 specification explorer powered by Scalar mounted at `/docs`.
+- **Bulk Data Migration**: RFC 4180-compliant CSV and JSON import/export with live validation and atomic batch insertion.
+- **File Storage**: Local file upload handling with automated thumbnail generation.
+- **Cloudflare Tunnel Support**: Single-flag public HTTPS tunnel for testing webhooks and mobile apps without router configuration.
 
 ---
 
-## 🚀 Quick Start Options
+## Quick Start
 
-### Option 1: Linux / VPS 1-Command Auto Setup (Recommended for Servers) 🔥
-Paste this single command into your Linux / VPS terminal:
-```bash
-curl -fsSL https://raw.githubusercontent.com/kothalkarkkartik/MiniBase/main/scripts/install.sh | bash
-```
-> **What this does automatically:**
-> - Detects OS & installs Node.js 22 LTS if missing.
-> - Clones MiniBase & installs production dependencies.
-> - Creates a **24/7 background system service (`systemd`)** with auto-restart on reboot.
-> - Configures the universal global **`minibase`** CLI command.
-> - Displays your Admin Studio URL and credentials.
+### Prerequisites
+- Node.js 22.0.0 or higher.
 
----
-
-### Option 2: Windows Native Desktop App 💻
-Simply double-click:
-```
-MiniBase-Studio.exe
-```
-> Launches a dedicated, standalone **Native Desktop Software Window** with custom icon, zero black console flickers, and automatic background server management!
-
----
-
-### Option 3: Manual Git / Local Setup
+### Local Setup
 ```bash
 # 1. Clone repository
 git clone https://github.com/kothalkarkkartik/MiniBase.git
@@ -127,157 +99,101 @@ npm install
 node bin/minibase.js serve --open
 ```
 
----
+Admin Studio opens at `http://localhost:8090/_/`. Default credentials:
+- **Email**: `admin@minibase.io`
+- **Password**: `admin12345`
 
-### Option 4: Docker & Docker Compose 🐳
+### Linux / VPS Automated Setup
+```bash
+curl -fsSL https://raw.githubusercontent.com/kothalkarkkartik/MiniBase/main/scripts/install.sh | bash
+```
+Sets up Node 22 if missing, creates a `systemd` background service, and configures the global `minibase` CLI.
+
+### Docker
 ```bash
 docker compose up -d
 ```
-Access Admin Studio at `http://localhost:8090/_/` (data persists in `./minibase_data`).
+Data persists in `./minibase_data`.
 
 ---
 
-## 💻 Universal Terminal CLI Suite (`minibase`)
+## CLI Reference
 
-MiniBase includes a complete command-line toolkit for server administrators and power users:
+MiniBase includes a command-line interface for administration and automated workflows:
 
 ```bash
-# Start server with auto-browser launch
+# Start server
 minibase serve --open
 
-# Start with free Cloudflare public HTTPS tunnel
+# Start with a public HTTPS Cloudflare tunnel
 minibase serve --tunnel
 
-# Check service status, live URL, collection count, and process PID
+# Check server status, active port, collections, and process PID
 minibase status
 
-# Execute raw SQL queries directly against SQLite WAL
-minibase sql "SELECT id, title, category, downloads FROM wallpapers LIMIT 5;"
+# Execute raw SQL directly against SQLite WAL
+minibase sql "SELECT id, title, category FROM wallpapers LIMIT 5;"
 
-# Manage Super-Admin accounts
+# Admin management
 minibase admin list
-minibase admin create admin@company.com mypassword123
-minibase admin passwd admin@company.com newpassword123
-minibase admin delete admin@company.com
+minibase admin create admin@example.com mypassword
+minibase admin passwd admin@example.com newpassword
+minibase admin delete admin@example.com
 
-# Inspect and manage collections
+# Collection management
 minibase collections list
 minibase collections delete old_temp_data
 
-# Bulk import & export data via CLI
-minibase export wallpapers ./wallpapers_backup.csv
-minibase import wallpapers ./new_data.csv
+# Data migration
+minibase export wallpapers ./wallpapers.csv
+minibase import wallpapers ./wallpapers.csv
 
-# Create an instant SQLite hot backup
-minibase backup ./backups/hot_backup.db
+# Hot database backup
+minibase backup ./backups/db.backup
 ```
 
 ---
 
-## 📖 How to Use MiniBase (Complete Guide)
+## Client Examples
 
-### 1. Initial Admin Login
-Open your browser and navigate to:
-```
-http://localhost:8090/_/
-```
-*(On a VPS, replace `localhost` with your VPS IP, e.g. `http://192.168.1.100:8090/_/`)*
+### JavaScript / TypeScript
+```javascript
+const BASE_URL = 'http://localhost:8090';
 
-- **Default Email**: `admin@minibase.io`
-- **Default Password**: `admin12345`
-*(You can change your password anytime in Settings)*
+// 1. Fetch records
+async function getPosts() {
+  const res = await fetch(`${BASE_URL}/api/collections/posts/records?sort=-created`);
+  const data = await res.json();
+  return data.items;
+}
 
----
+// 2. Create record
+async function createPost(payload) {
+  const res = await fetch(`${BASE_URL}/api/collections/posts/records`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
 
-### 2. Creating Collections & Custom Schema
-1. Click **`+ New Collection`** in the left sidebar.
-2. Enter collection name (e.g. `products`, `wallpapers`, `posts`).
-3. Choose Collection Type:
-   - **Base Collection**: Standard data table.
-   - **Auth Collection**: User accounts table with authentication, email, and password hashing.
-4. Add Fields with custom types:
-   - `text`, `number`, `bool`, `email`, `url`, `json`, `file`, `relation`, `select`.
-5. Set API Access Rules (e.g. Leave blank for Public, or `@request.auth.id != ""` for Authenticated Users).
-6. Click **Create Collection** — your SQLite table is created instantly!
-
----
-
-### 3. Inline Cell Editing (Excel / Notion Style)
-- Double-click any text or number cell in the table to edit inline.
-- Toggle booleans directly with a single click.
-- Press **Enter** to save, or **Escape** to cancel.
-
----
-
-### 4. Bulk CSV / JSON Import & Export
-1. In any collection view, click the **`Import CSV / JSON`** button in the top toolbar.
-2. Drag and drop your `.csv` or `.json` file.
-3. MiniBase will display a 5-row live preview and detect column types.
-4. Click **Import Records** — all rows are batch-inserted inside an atomic SQLite transaction in milliseconds!
-5. To export, click **`Export ▾`** and choose **Export as CSV** or **Export as JSON**.
-
----
-
-### 5. Interactive API Documentation (`/docs`)
-Navigate to:
-```
-http://localhost:8090/docs
-```
-MiniBase dynamically generates OpenAPI 3.0 specifications for all collections and serves them using **Scalar** — test endpoints, review request bodies, and copy curl commands with live interactive exploration.
-
----
-
-### 6. Visual Filter Builder
-1. Click the **`Filter Builder`** icon next to the search bar.
-2. Add condition chips: `[ Field ] [ Operator (=, !=, >, <, contains) ] [ Value ]`.
-3. Combine rules with `AND` / `OR` logic.
-4. The table filters immediately without having to write raw SQL.
-
----
-
-### 7. 1-Click "Connect App" Code Generator
-1. Click the green **`Connect App`** button in the topbar or table header.
-2. Select your platform:
-   - 📱 **Flutter / Dart**
-   - ⚛️ **JavaScript / React / Next.js**
-   - 🐍 **Python**
-   - 🌐 **cURL / Postman**
-3. Copy-paste the ready-to-run snippet directly into your frontend project!
-
----
-
-### 8. Worldwide Public Live Tunnel
-Want to test your mobile app or webhook without configuring router port-forwarding or SSL?
-```bash
-node bin/minibase.js serve --tunnel
-```
-MiniBase will instantly spin up a **Cloudflare Edge SSL Tunnel** with a worldwide HTTPS URL:
-```
-🌍 MiniBase is LIVE Worldwide:
-➜ Mobile / Flutter API: https://random-name.trycloudflare.com
-➜ Admin Studio:        https://random-name.trycloudflare.com/_/
+// 3. Real-time subscriptions via SSE
+const sse = new EventSource(`${BASE_URL}/api/realtime`);
+sse.addEventListener('create', (event) => {
+  const { collection, record } = JSON.parse(event.data);
+  console.log(`New record in ${collection}:`, record);
+});
 ```
 
----
-
-### 9. Database Backup & Disaster Recovery
-- **Download Hot Backup**: Navigate to **Settings** ➜ Click **Download DB Backup** (or `GET /api/admins/backup/export`).
-- **Restore Backup**: Drag and drop any `.json` or `.db` backup file to restore all collections and rows instantly.
-
----
-
-## 📱 Connect App & Client SDKs
-
-### 1. Flutter (Dart SDK)
+### Dart / Flutter
 ```dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class MiniBaseService {
-  static const String baseUrl = 'http://localhost:8090'; // or your Cloudflare Tunnel URL
+class MiniBaseClient {
+  static const String baseUrl = 'http://localhost:8090';
 
-  // Fetch records
-  static Future<List<dynamic>> getRecords(String collection) async {
+  static Future<List<dynamic>> fetchRecords(String collection) async {
     final res = await http.get(Uri.parse('$baseUrl/api/collections/$collection/records?sort=-created'));
     if (res.statusCode == 200) {
       return jsonDecode(res.body)['items'];
@@ -285,8 +201,7 @@ class MiniBaseService {
     throw Exception('Failed to load records');
   }
 
-  // Insert record
-  static Future<Map<String, dynamic>> createRecord(String collection, Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> insertRecord(String collection, Map<String, dynamic> data) async {
     final res = await http.post(
       Uri.parse('$baseUrl/api/collections/$collection/records'),
       headers: {'Content-Type': 'application/json'},
@@ -297,113 +212,79 @@ class MiniBaseService {
 }
 ```
 
----
-
-### 2. JavaScript / React / Next.js
-```javascript
-const BASE_URL = 'http://localhost:8090';
-
-// 1. Fetch Records
-async function getWallpapers() {
-  const res = await fetch(`${BASE_URL}/api/collections/wallpapers/records?sort=-created`);
-  const data = await res.json();
-  return data.items;
-}
-
-// 2. Create Record
-async function createWallpaper(payload) {
-  const res = await fetch(`${BASE_URL}/api/collections/wallpapers/records`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  return res.json();
-}
-
-// 3. Live Realtime Push Updates via SSE
-const sse = new EventSource(`${BASE_URL}/api/realtime`);
-sse.addEventListener('create', (event) => {
-  const { collection, record } = JSON.parse(event.data);
-  console.log(`[Realtime Created in ${collection}]:`, record);
-});
-```
-
----
-
-### 3. Python Client
+### Python
 ```python
 import requests
 
 BASE_URL = "http://localhost:8090"
 
 # Fetch records
-res = requests.get(f"{BASE_URL}/api/collections/wallpapers/records?sort=-created")
-data = res.json()
-print("Records:", data.get("items", []))
+res = requests.get(f"{BASE_URL}/api/collections/posts/records?sort=-created")
+records = res.json().get("items", [])
 
 # Insert record
-payload = {
-    "title": "Neon Sunset",
-    "category": "nature",
-    "downloads": 120,
-}
-post_res = requests.post(f"{BASE_URL}/api/collections/wallpapers/records", json=payload)
-print("Created Record:", post_res.json())
+payload = {"title": "Hello World", "published": True}
+post_res = requests.post(f"{BASE_URL}/api/collections/posts/records", json=payload)
 ```
 
----
-
-### 4. cURL
+### cURL
 ```bash
-# 1. Fetch records
-curl -X GET "http://localhost:8090/api/collections/wallpapers/records?page=1&perPage=20"
+# Fetch paginated records
+curl -X GET "http://localhost:8090/api/collections/posts/records?page=1&perPage=20"
 
-# 2. Insert record
-curl -X POST "http://localhost:8090/api/collections/wallpapers/records" \
+# Insert a record
+curl -X POST "http://localhost:8090/api/collections/posts/records" \
      -H "Content-Type: application/json" \
-     -d '{"title":"Cyberpunk City","category":"urban"}'
+     -d '{"title":"First Post","published":true}'
 ```
 
 ---
 
-## 🌐 REST API Cheatsheet
+## REST API
 
 | Endpoint | Method | Description |
 | :--- | :---: | :--- |
 | `/api/collections` | `GET` | List all collections |
-| `/api/collections` | `POST` | Create a new collection schema |
-| `/api/collections/:col/records` | `GET` | List paginated records (`?page=1&perPage=30&sort=-created&filter=...`) |
-| `/api/collections/:col/records/:id` | `GET` | Get single record by ID |
+| `/api/collections` | `POST` | Create a collection schema |
+| `/api/collections/:col/records` | `GET` | List records (`?page=1&perPage=30&sort=-created&filter=...`) |
+| `/api/collections/:col/records/:id` | `GET` | Retrieve single record |
 | `/api/collections/:col/records` | `POST` | Create a new record |
 | `/api/collections/:col/records/:id` | `PATCH` | Update a record |
 | `/api/collections/:col/records/:id` | `DELETE` | Delete a record |
-| `/api/collections/:col/export` | `GET` | Export collection records as CSV or JSON |
+| `/api/collections/:col/export` | `GET` | Export records as CSV or JSON |
 | `/api/collections/:col/import` | `POST` | Bulk import records with atomic SQLite transactions |
-| `/api/batch` | `POST` | Execute atomic batch operations (inserts, updates, deletes) |
-| `/api/admins/auth-with-password` | `POST` | Admin authentication & JWT token generation |
-| `/api/collections/:authCol/auth-with-password` | `POST` | User login authentication |
-| `/api/files/:col/:id/:filename` | `GET` | Serve stored files & auto-generated thumbnails |
-| `/api/realtime` | `GET` | Server-Sent Events (SSE) live activity stream |
-| `/docs` | `GET` | Interactive OpenAPI 3.0 documentation powered by Scalar |
+| `/api/batch` | `POST` | Atomic batch operations |
+| `/api/admins/auth-with-password` | `POST` | Admin authentication & token generation |
+| `/api/collections/:authCol/auth-with-password` | `POST` | User authentication |
+| `/api/files/:col/:id/:filename` | `GET` | File delivery & thumbnail generation |
+| `/api/realtime` | `GET` | Server-Sent Events (SSE) live event stream |
+| `/docs` | `GET` | Interactive OpenAPI 3.0 documentation |
 | `/api/admins/backup/export` | `GET` | Download full database JSON archive |
 | `/api/admins/backup/restore` | `POST` | Restore database archive |
 
 ---
 
-## ⚙️ Environment Configuration
+## Demo Application
 
-| Variable | Default | Description |
-| :--- | :---: | :--- |
-| `PORT` | `8090` | HTTP Server port |
-| `HOST` | `0.0.0.0` | Bind host address |
-| `DATA_DIR` | `./minibase_data` | Directory for SQLite DB and uploaded media files |
-| `JWT_SECRET` | auto-generated | Secret key for signing tokens |
-| `NODE_ENV` | `production` | Environment mode (`development` / `production`) |
-| `MINIBASE_TUNNEL` | `false` | Enable automatic Cloudflare Live Tunnel on startup |
+A complete client application demonstrating file storage, REST querying, and live SSE updates is included in [`examples/wallpaper-app`](examples/wallpaper-app) and served at:
+
+👉 `http://localhost:8090/demo`
 
 ---
 
-## 📄 License
+## Environment Variables
 
-MiniBase is open-source software licensed under the [MIT License](LICENSE).
-Built with ❤️ for developers who love speed, simplicity, and zero configuration.
+| Variable | Default | Description |
+| :--- | :---: | :--- |
+| `PORT` | `8090` | Server HTTP port |
+| `HOST` | `0.0.0.0` | Bind address |
+| `DATA_DIR` | `./minibase_data` | Storage directory for SQLite database and uploaded files |
+| `JWT_SECRET` | auto-generated | Secret key for signing tokens |
+| `NODE_ENV` | `production` | Environment mode (`development` / `production`) |
+| `MINIBASE_TUNNEL` | `false` | Start Cloudflare tunnel on launch |
+
+---
+
+## License
+
+MIT &copy; Kartik Kothalkar. See [LICENSE](LICENSE) for details.
