@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WallVibe — 4K & Ultra-HD Wallpapers</title>
+    <title>WallVibe — Powered by MiniBase BaaS Engine</title>
     <link rel="stylesheet" href="./style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   </head>
   <body>
     <!-- Background Glow Blobs -->
@@ -18,17 +18,17 @@
     <nav class="glass-nav">
       <div class="nav-brand">
         <div class="brand-badge">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
         </div>
-        <span class="logo">Wall<span>Vibe</span></span>
-        <span class="pro-tag">PRO</span>
+        <span class="logo">Mini<span>Base</span> <span style="font-weight:400; color:#94A3B8; font-size:1.05rem; margin-left:4px;">Wallpapers</span></span>
+        <span class="pro-tag">BAAS CLIENT</span>
       </div>
 
       <div class="nav-center">
         <div class="category-pills">
           <button class="cat-pill active" data-cat="all">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polygon points="12 8 8 12 12 16 16 12 12 8"></polygon></svg>
-            <span>All</span>
+            <span>All Wallpapers</span>
           </button>
           <button class="cat-pill" data-cat="Nature">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9s-9-4.03-9-9a9 9 0 0 1 9-9z"></path><path d="M12 7v10"></path></svg>
@@ -42,21 +42,21 @@
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="2"></line><line x1="15" y1="22" x2="15" y2="2"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg>
             <span>Architecture</span>
           </button>
-          <button class="cat-pill" data-cat="Cyberpunk">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-            <span>Cyberpunk</span>
-          </button>
         </div>
       </div>
 
       <div class="nav-actions">
-        <a href="http://localhost:8090/_/" target="_blank" class="admin-link">
+        <div class="realtime-status-pill">
+          <span class="pulse-emerald"></span>
+          <span>SSE Connected</span>
+        </div>
+        <a href="/_/" target="_blank" class="admin-link">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-          <span>Admin Studio</span>
+          <span>Admin Studio ↗</span>
         </a>
-        <a href="/seed.html" target="_blank" class="seed-link">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-          <span>Seed Data</span>
+        <a href="/docs" target="_blank" class="docs-link">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>REST Docs ↗</span>
         </a>
       </div>
     </nav>
@@ -65,18 +65,46 @@
     <header class="hero">
       <div class="hero-badge">
         <span class="pulse-emerald"></span>
-        <span>MiniBase Realtime Engine</span>
+        <span>⚡ Built with MiniBase BaaS • node:sqlite WAL • Realtime SSE</span>
       </div>
 
-      <h1>Discover <span>Ultra-HD</span> Wallpapers</h1>
-      <p class="hero-subtitle">Hand-picked 4K & AMOLED backgrounds curated directly from your MiniBase backend.</p>
+      <h1>Ultra-HD Wallpapers<br/><span>Powered by MiniBase</span></h1>
+      <p class="hero-subtitle">High-performance 4K wallpapers served directly from MiniBase SQLite WAL file storage with zero configuration and live SSE sync.</p>
 
       <div class="search-container">
         <div class="search-box">
           <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" id="search-input" placeholder="Live search title, category, or Record ID..." autocomplete="off" />
+          <input type="text" id="search-input" placeholder="Live search title, category, or MiniBase Record ID..." autocomplete="off" />
           <button id="clear-search" class="clear-search-btn" title="Clear search" style="display:none;">&times;</button>
           <div class="search-kbd">⌘K</div>
+        </div>
+      </div>
+
+      <!-- Live MiniBase Engine Telemetry Bar -->
+      <div class="telemetry-bar">
+        <div class="telemetry-item">
+          <span class="telemetry-label">DATABASE</span>
+          <span class="telemetry-val">SQLite (WAL Engine)</span>
+        </div>
+        <div class="telemetry-divider"></div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">COLLECTION</span>
+          <span class="telemetry-val" id="telemetry-collection">wallpapers (6 records)</span>
+        </div>
+        <div class="telemetry-divider"></div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">REST API</span>
+          <span class="telemetry-val code-val">GET /api/collections/wallpapers/records</span>
+        </div>
+        <div class="telemetry-divider"></div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">STORAGE</span>
+          <span class="telemetry-val code-val">/api/files/wallpapers/:id/:file</span>
+        </div>
+        <div class="telemetry-divider"></div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">ENGINE</span>
+          <span class="telemetry-val status-ok">● Online (Port 8090)</span>
         </div>
       </div>
     </header>
@@ -85,7 +113,7 @@
     <main class="container">
       <div id="loader" class="loader-container">
         <div class="spinner"></div>
-        <span>Loading 4K Wallpapers...</span>
+        <span>Loading from MiniBase SQLite Storage...</span>
       </div>
 
       <div id="masonry" class="masonry-grid">
@@ -106,6 +134,7 @@
             <h2 id="preview-title">Wallpaper Title</h2>
             <div class="modal-tags">
               <span id="preview-cat" class="cat-tag">Category</span>
+              <span id="preview-rec-id" class="record-id-tag">ID: ...</span>
               <span class="resolution-tag">4K Ultra-HD</span>
             </div>
           </div>

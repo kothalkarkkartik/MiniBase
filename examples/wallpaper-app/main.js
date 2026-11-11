@@ -6,13 +6,15 @@ const mb = new MiniBaseClient(backendOrigin);
 
 const masonry = document.getElementById('masonry');
 const loader = document.getElementById('loader');
-const navLinks = document.querySelectorAll('.nav-links a[data-cat], .cat-pill[data-cat]');
+const navLinks = document.querySelectorAll('.cat-pill[data-cat]');
+const telemetryCollection = document.getElementById('telemetry-collection');
 
 // Modal elements
 const modal = document.getElementById('preview-modal');
 const modalImg = document.getElementById('preview-img');
 const modalTitle = document.getElementById('preview-title');
 const modalCat = document.getElementById('preview-cat');
+const modalRecId = document.getElementById('preview-rec-id');
 const modalDownloads = document.getElementById('preview-downloads');
 const closeBtn = document.getElementById('close-modal');
 const downloadBtn = document.getElementById('download-btn');
@@ -41,6 +43,11 @@ async function loadWallpapers(category = 'all', searchQuery = '') {
 
     const res = await mb.request(`/api/collections/wallpapers/records?${params.toString()}`);
     currentWallpapers = res.items || [];
+    
+    if (telemetryCollection) {
+      telemetryCollection.textContent = `wallpapers (${currentWallpapers.length} records)`;
+    }
+
     renderGrid(currentWallpapers, searchQuery);
   } catch (err) {
     console.error('Failed to load wallpapers:', err);
@@ -59,7 +66,7 @@ function renderGrid(items, query = '', isError = false) {
         </div>
         <h3 class="not-found-title">${query ? 'Record Not Found' : 'No Wallpapers Available'}</h3>
         <p class="not-found-desc">
-          ${query ? `No matching record found for "${query}".` : 'No wallpapers available in this category yet.'}
+          ${query ? `No matching record found in MiniBase for "${query}".` : 'No wallpapers available in this category yet.'}
         </p>
         ${query ? `<button id="reset-search-btn" class="reset-search-btn">Reset Search</button>` : ''}
       </div>
@@ -71,7 +78,7 @@ function renderGrid(items, query = '', isError = false) {
         if (searchInput) searchInput.value = '';
         if (clearSearchBtn) clearSearchBtn.style.display = 'none';
         currentSearchQuery = '';
-        const activeCat = document.querySelector('.nav-links a.active, .cat-pill.active')?.getAttribute('data-cat') || 'all';
+        const activeCat = document.querySelector('.cat-pill.active')?.getAttribute('data-cat') || 'all';
         loadWallpapers(activeCat, '');
       });
     }
@@ -79,16 +86,23 @@ function renderGrid(items, query = '', isError = false) {
   }
 
   masonry.innerHTML = items.map(item => {
-    // We use the SDK to get the file URL
+    // MiniBase file streaming endpoint
     const imgUrl = mb.getFileUrl('wallpapers', item.id, item.image);
     
     return `
       <div class="wallpaper-card" data-id="${item.id}">
+        <div class="card-top-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <span>MiniBase BaaS</span>
+        </div>
         <img src="${imgUrl}" alt="${item.title}" loading="lazy" />
         <div class="card-overlay">
           <div class="card-title">${item.title}</div>
           <div class="card-meta">
-            <span class="cat-tag">${item.category || 'Uncategorized'}</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="cat-tag">${item.category || 'Nature'}</span>
+              <span class="record-id-tag">ID: ${item.id.slice(0, 8)}...</span>
+            </div>
             <span style="display:inline-flex; align-items:center; gap:4px;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               ${item.downloads || 0}
@@ -115,7 +129,8 @@ function openModal(record) {
   
   modalImg.src = imgUrl;
   modalTitle.textContent = record.title;
-  modalCat.textContent = record.category || 'Uncategorized';
+  modalCat.textContent = record.category || 'Nature';
+  if (modalRecId) modalRecId.textContent = `ID: ${record.id}`;
   modalDownloads.textContent = record.downloads || 0;
   
   modal.classList.add('active');
@@ -152,7 +167,7 @@ if (searchInput) {
 
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-      const activeCat = document.querySelector('.nav-links a.active')?.getAttribute('data-cat') || 'all';
+      const activeCat = document.querySelector('.cat-pill.active')?.getAttribute('data-cat') || 'all';
       loadWallpapers(activeCat, val);
     }, 250);
   });
@@ -163,7 +178,7 @@ if (clearSearchBtn) {
     searchInput.value = '';
     clearSearchBtn.style.display = 'none';
     currentSearchQuery = '';
-    const activeCat = document.querySelector('.nav-links a.active')?.getAttribute('data-cat') || 'all';
+    const activeCat = document.querySelector('.cat-pill.active')?.getAttribute('data-cat') || 'all';
     loadWallpapers(activeCat, '');
   });
 }
@@ -186,7 +201,7 @@ downloadBtn.addEventListener('click', async () => {
     modalDownloads.textContent = newDownloads;
     
     // Refresh grid
-    const activeCat = document.querySelector('.nav-links a.active')?.getAttribute('data-cat') || 'all';
+    const activeCat = document.querySelector('.cat-pill.active')?.getAttribute('data-cat') || 'all';
     loadWallpapers(activeCat, currentSearchQuery);
   } catch(err) {
     console.error('Failed to update download count:', err);
@@ -201,6 +216,17 @@ downloadBtn.addEventListener('click', async () => {
   a.click();
   document.body.removeChild(a);
 });
+
+// Subscribe to Realtime SSE events
+try {
+  mb.collection('wallpapers').subscribe('*', (event) => {
+    console.log('[MiniBase SSE] Event received:', event);
+    const activeCat = document.querySelector('.cat-pill.active')?.getAttribute('data-cat') || 'all';
+    loadWallpapers(activeCat, currentSearchQuery);
+  });
+} catch (e) {
+  console.warn('Realtime SSE subscription notice:', e);
+}
 
 // Initial load
 loadWallpapers();

@@ -17,7 +17,7 @@ async function seed() {
   console.log('Logging in...');
   const authRes = await mb.request('/api/admins/auth-with-password', {
     method: 'POST',
-    body: JSON.stringify({ email: 'admin@minibase.io', password: 'admin12345' }),
+    body: JSON.stringify({ email: 'kartikkothalkar1@gmail.com', password: 'admin12345' }),
   });
   
   if (authRes.token) {
