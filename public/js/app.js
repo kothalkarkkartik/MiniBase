@@ -487,6 +487,11 @@ async function initApp() {
     }
   }
 
+  if (hash === '#/register') {
+    renderRegisterView();
+    return;
+  }
+
   if (hash === '#/forgot-password') {
     renderForgotPasswordView();
     return;
@@ -516,6 +521,8 @@ window.addEventListener('hashchange', () => {
     const params = new URLSearchParams(hash.split('?')[1] || '');
     const token = params.get('token');
     if (token) renderConfirmPasswordResetView(token);
+  } else if (hash === '#/register') {
+    renderRegisterView();
   } else if (hash === '#/forgot-password') {
     renderForgotPasswordView();
   } else if (!window.api.isAuthenticated()) {
@@ -1144,7 +1151,96 @@ function renderSetupView() {
   });
 }
 
-// 2. Login View
+
+// 2.0 Register View
+function renderRegisterView() {
+  document.getElementById('app').innerHTML = `
+    <div class="auth-wrapper">
+      <div class="auth-glow"></div>
+      <div class="card" style="width:400px; position:relative; z-index:10; border-color:rgba(255, 255, 255, 0.12);">
+        ${getHaramiDuckSvg()}
+        <div style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border-subtle); text-align:center;">
+          ${getMiniBaseLogoText('lg')}
+          <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Create an admin account for Studio</p>
+        </div>
+
+        <div style="display:flex; background:rgba(255,255,255,0.06); padding:3px; border-radius:8px; margin-bottom:16px;">
+          <button type="button" onclick="location.hash='#/'" class="btn" style="flex:1; background:transparent; color:var(--text-muted); font-size:13px; padding:6px; border-radius:6px; border:none; cursor:pointer;">Sign In</button>
+          <button type="button" class="btn" style="flex:1; background:var(--primary); color:#fff; font-size:13px; padding:6px; border-radius:6px; font-weight:600; border:none;">Register</button>
+        </div>
+
+        <form id="register-form" style="display:flex; flex-direction:column; gap:16px;" novalidate>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="register-email" class="input" placeholder="admin@example.com" autofocus />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Password</label>
+            <input type="password" id="register-password" class="input" placeholder="Minimum 8 characters" minlength="8" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" id="register-confirm" class="input" placeholder="Repeat password" minlength="8" />
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top:8px; padding:10px 16px; font-size:14px;">
+            Register & Enter Studio
+          </button>
+        </form>
+        <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-top:16px; margin-bottom:0;">
+          Already have an account? <a href="#/" style="color:#38BDF8; text-decoration:none; font-weight:500;">Sign In</a>
+        </p>
+      </div>
+    </div>
+  `;
+
+  bindDuckInteractions();
+
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('register-email').value.trim();
+    const pass = document.getElementById('register-password').value;
+    const confirm = document.getElementById('register-confirm').value;
+
+    if (!email && !pass) {
+      roastDuckUser('Form is completely empty! Type something 🦆');
+      document.getElementById('register-email').focus();
+      return;
+    }
+    if (!email) {
+      roastDuckUser('Email is required to register! 📧');
+      document.getElementById('register-email').focus();
+      return;
+    }
+    if (!pass) {
+      roastDuckUser('Password cannot be empty! 🔑');
+      document.getElementById('register-password').focus();
+      return;
+    }
+    if (pass.length < 8) {
+      roastDuckUser('Password must be at least 8 characters! 🛡️');
+      document.getElementById('register-password').focus();
+      return;
+    }
+    if (pass !== confirm) {
+      roastDuckUser('Passwords do not match! Check again 👀');
+      document.getElementById('register-confirm').focus();
+      return;
+    }
+
+    try {
+      await window.api.register(email, pass);
+      showToast('Admin account registered! Welcome to MiniBase!', 'success');
+      setTimeout(() => {
+        window.location.hash = '';
+        initApp();
+      }, 500);
+    } catch (err) {
+      roastDuckUser(err.message || 'Registration failed');
+    }
+  });
+}
+
+// 2. Secure Login View (Locked to registered Admins only)
 function renderLoginView() {
   document.getElementById('app').innerHTML = `
     <div class="auth-wrapper">
@@ -1167,7 +1263,7 @@ function renderLoginView() {
             </div>
             <input type="password" id="login-password" class="input" placeholder="⬢⬢⬢⬢⬢⬢⬢⬢" />
           </div>
-          <button type="submit" class="btn btn-primary" style="margin-top:8px; padding:10px 16px; font-size:14px;">
+          <button type="submit" class="btn btn-primary" style="margin-top:8px; padding:10px 16px; font-size:14px; font-weight:700;">
             Sign In to Studio
           </button>
         </form>
@@ -1199,7 +1295,7 @@ function renderLoginView() {
     }
 
     if (!pass) {
-      roastDuckUser(); // triggers savage password roasts
+      roastDuckUser();
       document.getElementById('login-password').focus();
       return;
     }
@@ -1209,7 +1305,7 @@ function renderLoginView() {
       showToast('Logged in successfully', 'success');
       setTimeout(() => initApp(), 400);
     } catch (err) {
-      roastDuckUser(err.message || 'Invalid credentials. Nice try, hacker! x');
+      roastDuckUser(err.message || 'Invalid credentials. Access denied! 🦆');
     }
   });
 }
@@ -2171,9 +2267,45 @@ async function loadCollections() {
       selectCollection(targetColName);
     } else if (state.collections.length > 0) {
       selectCollection(state.collections[0].name);
+    } else {
+      renderEmptyCollectionsView();
     }
   } catch (err) {
     showToast(err.message, 'error');
+  }
+}
+
+
+function renderEmptyCollectionsView() {
+  state.activeCollection = null;
+  const title = document.getElementById('topbar-title-section');
+  const actions = document.getElementById('topbar-actions');
+  const content = document.getElementById('content-view');
+
+  if (title) title.innerHTML = '<span>Collections</span> <span style="font-size:12px; font-weight:400; color:var(--text-muted);">(0 collections)</span>';
+  if (actions) {
+    actions.innerHTML = `
+      <button class="btn btn-primary" onclick="openCollectionModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>+ New Collection</span>
+      </button>
+    `;
+  }
+  if (content) {
+    content.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:65vh; text-align:center; padding:24px;">
+        <div style="width:68px; height:68px; border-radius:18px; background:rgba(16,185,129,0.12); display:flex; align-items:center; justify-content:center; margin-bottom:20px; border:1px solid rgba(16,185,129,0.25);">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+        </div>
+        <h2 style="font-size:22px; font-weight:800; color:#fff; margin-bottom:8px;">Ready to build your database!</h2>
+        <p style="font-size:14px; color:var(--text-muted); max-width:440px; line-height:1.6; margin-bottom:24px;">
+          No collections exist yet. You have full freedom to create your own custom database tables (Base) or User Auth collections anytime.
+        </p>
+        <button class="btn btn-primary" style="padding:12px 24px; font-size:14px; font-weight:700;" onclick="openCollectionModal()">
+          + Create Your First Collection
+        </button>
+      </div>
+    `;
   }
 }
 
@@ -2267,10 +2399,29 @@ function renderTopBar() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
         <span>Edit Columns</span>
       </button>
-      <button class="btn btn-secondary" onclick="exportCollectionData()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        <span>Export JSON</span>
+
+      <!-- Export Dropdown -->
+      <div style="position:relative; display:inline-block;" id="export-dropdown-wrapper">
+        <button class="btn btn-secondary" onclick="toggleExportMenu(event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Export ▾</span>
+        </button>
+        <div id="export-dropdown-menu" style="display:none; position:absolute; right:0; top:calc(100% + 4px); background:#1E293B; border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:6px; min-width:150px; z-index:100; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+          <button type="button" class="btn" style="width:100%; text-align:left; background:transparent; color:#fff; font-size:13px; padding:8px 10px; border-radius:6px; border:none; cursor:pointer;" onclick="exportCollectionAction('csv')">
+            📄 Export to CSV
+          </button>
+          <button type="button" class="btn" style="width:100%; text-align:left; background:transparent; color:#fff; font-size:13px; padding:8px 10px; border-radius:6px; border:none; cursor:pointer;" onclick="exportCollectionAction('json')">
+            📦 Export to JSON
+          </button>
+        </div>
+      </div>
+
+      <!-- Import Button -->
+      <button class="btn btn-secondary" onclick="openImportModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        <span>Import CSV / JSON</span>
       </button>
+
       <button class="btn btn-primary" onclick="openRecordDrawer()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         <span>New Record</span>
@@ -3494,22 +3645,216 @@ async function submitRecordForm(recordId) {
   });
 }
 
-function exportCollectionData() {
-  if (!state.records || state.records.length === 0) {
-    showToast('No records to export', 'info');
-    return;
+
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('export-dropdown-menu');
+  if (menu) {
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+document.addEventListener('click', () => {
+  const menu = document.getElementById('export-dropdown-menu');
+  if (menu) menu.style.display = 'none';
+});
+
+async function exportCollectionAction(format) {
+  const menu = document.getElementById('export-dropdown-menu');
+  if (menu) menu.style.display = 'none';
+  if (!state.activeCollection) return;
+
+  try {
+    showToast(`Exporting ${state.activeCollection.name} to ${format.toUpperCase()}...`, 'info');
+    await window.api.exportCollection(state.activeCollection.name, format);
+    showToast(`Downloaded ${format.toUpperCase()} successfully!`, 'success');
+  } catch (err) {
+    showToast(err.message || 'Export failed', 'error');
+  }
+}
+
+let _importSelectedFile = null;
+
+function openImportModal() {
+  if (!state.activeCollection) return;
+  _importSelectedFile = null;
+
+  const col = state.activeCollection;
+
+  const modalHtml = `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:0;">
+        Import records into <strong style="color:#fff;">${escapeHtml(col.name)}</strong> collection. You can upload a <strong>.csv</strong> or <strong>.json</strong> file (thousands of records processed instantly in SQLite).
+      </p>
+
+      <!-- Drag & Drop Zone -->
+      <div id="import-drop-zone" style="border:2px dashed rgba(255,255,255,0.2); border-radius:12px; padding:32px 20px; text-align:center; background:rgba(255,255,255,0.02); cursor:pointer; transition:all 0.2s ease;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" style="margin-bottom:10px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        <h4 style="font-size:15px; font-weight:700; color:#fff; margin-bottom:4px;">Drag and drop your CSV or JSON file here</h4>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">or click anywhere to browse from your computer</p>
+        <button type="button" class="btn btn-secondary" style="font-size:12px; padding:6px 14px; pointer-events:none;">Select File</button>
+        <input type="file" id="import-modal-file-input" accept=".csv,.json" style="display:none;" />
+      </div>
+
+      <!-- File Selected Info & Preview Box -->
+      <div id="import-preview-box" style="display:none; flex-direction:column; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:13px; font-weight:700; color:#fff;" id="import-file-name">file.csv</span>
+            <span style="font-size:11px; color:var(--text-muted); margin-left:8px;" id="import-file-size">12 KB</span>
+          </div>
+          <span style="font-size:11px; background:rgba(16,185,129,0.15); color:var(--primary); font-weight:700; padding:2px 8px; border-radius:10px;" id="import-rows-badge">0 rows detected</span>
+        </div>
+        <div id="import-preview-table-container" style="max-height:160px; overflow:auto; border-radius:6px; border:1px solid rgba(255,255,255,0.06);"></div>
+      </div>
+    </div>
+  `;
+
+  const footerHtml = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button id="import-submit-btn" class="btn btn-primary" onclick="submitImportAction()" disabled style="opacity:0.6; cursor:not-allowed;">
+      ⚡ Start Import
+    </button>
+  `;
+
+  openModal(`Import Records (${escapeHtml(col.name)})`, modalHtml, footerHtml);
+
+  // Setup Drag & Drop Handlers
+  setTimeout(() => {
+    const dropZone = document.getElementById('import-drop-zone');
+    const fileInput = document.getElementById('import-modal-file-input');
+
+    if (dropZone && fileInput) {
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.style.borderColor = 'var(--primary)';
+          dropZone.style.background = 'rgba(16,185,129,0.08)';
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.style.borderColor = 'rgba(255,255,255,0.2)';
+          dropZone.style.background = 'rgba(255,255,255,0.02)';
+        });
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer?.files;
+        if (files && files.length > 0) {
+          handleSelectedImportFile(files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+          handleSelectedImportFile(fileInput.files[0]);
+        }
+      });
+    }
+  }, 50);
+}
+
+function handleSelectedImportFile(file) {
+  _importSelectedFile = file;
+  const fileNameEl = document.getElementById('import-file-name');
+  const fileSizeEl = document.getElementById('import-file-size');
+  const rowsBadgeEl = document.getElementById('import-rows-badge');
+  const previewBox = document.getElementById('import-preview-box');
+  const previewContainer = document.getElementById('import-preview-table-container');
+  const submitBtn = document.getElementById('import-submit-btn');
+
+  if (!file) return;
+
+  if (fileNameEl) fileNameEl.textContent = file.name;
+  if (fileSizeEl) fileSizeEl.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+  if (previewBox) previewBox.style.display = 'flex';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    let previewRows = [];
+    let totalCount = 0;
+
+    if (file.name.toLowerCase().endsWith('.json')) {
+      try {
+        const parsed = JSON.parse(content);
+        const arr = Array.isArray(parsed) ? parsed : (parsed.records || parsed.items || [parsed]);
+        totalCount = arr.length;
+        previewRows = arr.slice(0, 5);
+      } catch {
+        previewRows = [];
+      }
+    } else {
+      const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length > 1) {
+        totalCount = lines.length - 1;
+        const headers = lines[0].split(',').map(h => h.replace(/^["']|["']$/g, '').trim());
+        previewRows = lines.slice(1, 6).map(line => {
+          const cells = line.split(',');
+          const obj = {};
+          headers.forEach((h, i) => { obj[h] = (cells[i] || '').replace(/^["']|["']$/g, '').trim(); });
+          return obj;
+        });
+      }
+    }
+
+    if (rowsBadgeEl) rowsBadgeEl.textContent = `${totalCount.toLocaleString()} rows detected`;
+
+    if (previewContainer && previewRows.length > 0) {
+      const keys = Object.keys(previewRows[0]).slice(0, 6);
+      let tableHtml = '<table class="table" style="font-size:12px; margin:0;"><thead><tr>';
+      keys.forEach(k => { tableHtml += `<th>${escapeHtml(k)}</th>`; });
+      tableHtml += '</tr></thead><tbody>';
+      previewRows.forEach(row => {
+        tableHtml += '<tr>';
+        keys.forEach(k => { tableHtml += `<td>${escapeHtml(String(row[k] || ''))}</td>`; });
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody></table>';
+      previewContainer.innerHTML = tableHtml;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+async function submitImportAction() {
+  if (!_importSelectedFile || !state.activeCollection) return;
+
+  const submitBtn = document.getElementById('import-submit-btn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '⚡ Importing records...';
   }
 
-  const jsonStr = JSON.stringify(state.records, null, 2);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${state.activeCollection.name}_export.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Exported JSON successfully', 'success');
+  try {
+    const res = await window.api.importCollection(state.activeCollection.name, _importSelectedFile);
+    showToast(res.message || `Successfully imported ${res.count} records!`, 'success');
+    closeModal();
+    await loadRecords();
+    renderTopBar();
+  } catch (err) {
+    showToast(err.message || 'Import failed', 'error');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '⚡ Start Import';
+    }
+  }
 }
+
 
 // 7. Visual Schema Builder Modal (PocketBase-style clean UI)
 function openCollectionModal(existingCollection = null) {
@@ -4469,6 +4814,89 @@ async function submitTestEmail() {
   }
 }
 
+
+// System Admins Management Modal
+async function openAdminsModal() {
+  try {
+    const res = await window.api.getAdmins();
+    const admins = res.items || [];
+
+    const bodyHtml = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
+          <div>
+            <h4 style="font-size:14px; font-weight:700; color:#fff; margin-bottom:2px;">Super Administrators</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin:0;">Users with full access to MiniBase Studio and SQLite database</p>
+          </div>
+          <button class="btn btn-primary" onclick="openCreateAdminModal()" style="font-size:12px; padding:6px 12px;">
+            + New Admin
+          </button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px; max-height:360px; overflow-y:auto;">
+          ${admins.map(adm => {
+            const isCurrent = adm.id === window.api.admin?.id || adm.email === window.api.admin?.email;
+            const initial = (adm.email || 'A')[0].toUpperCase();
+            const dateStr = adm.created ? new Date(adm.created).toLocaleDateString() : '';
+            return `
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div style="width:34px; height:34px; border-radius:50%; background:var(--primary); color:#fff; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center;">
+                    ${initial}
+                  </div>
+                  <div>
+                    <div style="font-size:13px; font-weight:600; color:#fff;">${escapeHtml(adm.email)}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">Created: ${dateStr}</div>
+                  </div>
+                </div>
+
+                <div>
+                  ${isCurrent ? `
+                    <span style="font-size:11px; font-weight:600; background:rgba(16,185,129,0.15); color:var(--primary); padding:3px 8px; border-radius:6px; border:1px solid rgba(16,185,129,0.3);">
+                      Active Session
+                    </span>
+                  ` : `
+                    <button class="btn-icon" style="color:#EF4444;" onclick="deleteAdminFromModal('${adm.id}')" title="Delete Admin">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    `;
+
+    openModal('System Administrators (_admins)', bodyHtml, footerHtml);
+  } catch (err) {
+    showToast(err.message || 'Failed to load admins', 'error');
+  }
+}
+
+function deleteAdminFromModal(id) {
+  showConfirmDialog({
+    title: 'Remove Administrator',
+    message: 'Are you sure you want to remove this admin account? They will lose all management access to MiniBase.',
+    confirmText: 'Remove Admin',
+    confirmBtnClass: 'btn-danger',
+    icon: '👤',
+    onConfirm: async () => {
+      try {
+        await window.api.deleteAdmin(id);
+        showToast('Admin removed', 'success');
+        openAdminsModal();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    },
+  });
+}
+
 function openCreateAdminModal() {
   const bodyHtml = `
     <form id="create-admin-form" style="display:flex; flex-direction:column; gap:14px;">
@@ -4499,7 +4927,7 @@ async function submitNewAdmin() {
     await window.api.createAdmin(email, pass);
     showToast('Admin created successfully', 'success');
     closeModal();
-    loadSettingsView();
+    if (state.view === "settings") { loadSettingsView(); } else { openAdminsModal(); }
   } catch (err) {
     showToast(err.message, 'error');
   }

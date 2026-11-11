@@ -48,6 +48,70 @@ adminRouter.post('/setup', async (req, res) => {
   }
 });
 
+// Admin self-registration endpoint (Locked once an admin exists)
+adminRouter.post('/register', async (req, res) => {
+  try {
+    if (AuthManager.hasAnyAdmin()) {
+      res.status(403).json({
+        code: 403,
+        message: 'Admin self-registration is locked for security. New admins must be created from inside Studio.'
+      });
+      return;
+    }
+
+    const { email, password } = req.body;
+    if (!email || !password) {
+      res.status(400).json({ code: 400, message: 'Email and password are required' });
+      return;
+    }
+    if (password.length < 8) {
+      res.status(400).json({ code: 400, message: 'Password must be at least 8 characters' });
+      return;
+    }
+
+    const db = getDB();
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = db.queryOne(`SELECT id FROM _admins WHERE email = ?`, [cleanEmail]);
+    if (existing) {
+      res.status(400).json({ code: 400, message: 'An admin with this email already exists' });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const id = generateId();
+    const passwordHash = await AuthManager.hashPassword(password);
+    const tokenKey = generateTokenKey();
+
+    db.run(
+      `INSERT INTO _admins (id, email, passwordHash, tokenKey, avatar, created, updated)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, cleanEmail, passwordHash, tokenKey, null, now, now]
+    );
+
+    const token = AuthManager.createToken({
+      id,
+      type: 'admin',
+      tokenKey,
+      email: cleanEmail,
+    });
+
+    res.status(201).json({
+      token,
+      admin: {
+        id,
+        email: cleanEmail,
+        created: now,
+        updated: now,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      code: 400,
+      message: error.message || 'Registration failed',
+    });
+  }
+});
+
 // Admin authentication with email and password
 adminRouter.post('/auth-with-password', async (req, res) => {
   try {

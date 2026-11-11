@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { SchemaManager } from '../core/schema.js';
 import { RuleEvaluator } from '../core/rules.js';
 import { AuthManager, decodeJwt } from '../core/auth.js';
@@ -9,8 +10,14 @@ import { OAuth2Manager } from '../core/oauth2.js';
 import { HookManager } from '../core/hooks.js';
 import { getDB } from '../core/db.js';
 import { generateId, generateTokenKey } from '../utils/id.js';
+import { parseCsv, recordsToCsv } from '../utils/csv.js';
 
 export const recordsRouter = Router();
+
+const importUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+}).single('file');
 
 const getParam = (val) => {
   if (Array.isArray(val)) return val[0] || '';
@@ -373,6 +380,193 @@ recordsRouter.post('/:name/confirm-verification', async (req, res) => {
   } catch (error) {
     res.status(400).json({ code: 400, message: error.message || 'Verification failed' });
   }
+});
+
+// --- BULK EXPORT & IMPORT ENDPOINTS ---
+
+// Export collection records as CSV or JSON
+recordsRouter.get('/:name/export', (req, res) => {
+  try {
+    const colName = getParam(req.params.name);
+    const collection = SchemaManager.getCollection(colName);
+    if (!collection) {
+      res.status(404).json({ code: 404, message: `Collection "${colName}" not found` });
+      return;
+    }
+
+    if (!req.isAdmin) {
+      const ruleCtx = buildRuleContext(req, null);
+      if (!RuleEvaluator.evaluate(collection.listRule, ruleCtx)) {
+        res.status(403).json({ code: 403, message: 'Unauthorized to export collection' });
+        return;
+      }
+    }
+
+    const format = (req.query.format || 'csv').toLowerCase();
+    const db = getDB();
+    const rawRecords = db.queryAll(`SELECT * FROM "${collection.name}" ORDER BY created DESC`);
+    const records = rawRecords.map(r => cleanRecord(r, collection));
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `${collection.name}_export_${timestamp}`;
+
+    if (format === 'json') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.json"`);
+      res.send(JSON.stringify(records, null, 2));
+      return;
+    }
+
+    // Default: CSV
+    const schemaFields = collection.schema.map(f => f.name);
+    const columns = ['id', 'created', 'updated'];
+    if (collection.type === 'auth') {
+      columns.push('email', 'verified', 'emailVisibility');
+    }
+    for (const f of schemaFields) {
+      if (!columns.includes(f)) columns.push(f);
+    }
+
+    const csvData = recordsToCsv(records, columns);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
+    res.send(csvData);
+  } catch (error) {
+    res.status(500).json({ code: 500, message: error.message || 'Export failed' });
+  }
+});
+
+// Bulk Import records from CSV or JSON file / payload
+recordsRouter.post('/:name/import', (req, res, next) => {
+  importUpload(req, res, async (err) => {
+    if (err) {
+      res.status(400).json({ code: 400, message: err.message });
+      return;
+    }
+
+    try {
+      const colName = getParam(req.params.name);
+      const collection = SchemaManager.getCollection(colName);
+      if (!collection) {
+        res.status(404).json({ code: 404, message: `Collection "${colName}" not found` });
+        return;
+      }
+
+      if (!req.isAdmin) {
+        res.status(403).json({ code: 403, message: 'Only admins can import bulk records' });
+        return;
+      }
+
+      let rows = [];
+
+      if (req.file) {
+        const fileContent = req.file.buffer.toString('utf-8');
+        const filename = (req.file.originalname || '').toLowerCase();
+        if (filename.endsWith('.json')) {
+          const parsed = JSON.parse(fileContent);
+          rows = Array.isArray(parsed) ? parsed : (parsed.records || parsed.items || [parsed]);
+        } else {
+          rows = parseCsv(fileContent);
+        }
+      } else if (Array.isArray(req.body)) {
+        rows = req.body;
+      } else if (Array.isArray(req.body?.records)) {
+        rows = req.body.records;
+      } else if (typeof req.body?.csv === 'string') {
+        rows = parseCsv(req.body.csv);
+      } else if (typeof req.body === 'string' && req.body.trim().startsWith('[')) {
+        rows = JSON.parse(req.body);
+      } else if (typeof req.body === 'string') {
+        rows = parseCsv(req.body);
+      }
+
+      if (!rows || rows.length === 0) {
+        res.status(400).json({ code: 400, message: 'No valid records found to import' });
+        return;
+      }
+
+      const db = getDB();
+      const now = new Date().toISOString();
+      const schemaFieldMap = new Map(collection.schema.map(f => [f.name.toLowerCase(), f]));
+      let insertedCount = 0;
+      const errors = [];
+
+      let defaultPasswordHash = null;
+      if (collection.type === 'auth') {
+        defaultPasswordHash = await AuthManager.hashPassword('changeMe12345');
+      }
+
+      db.transaction(() => {
+        for (let i = 0; i < rows.length; i++) {
+          try {
+            const raw = rows[i];
+            const clean = {};
+
+            clean.id = raw.id || raw.ID || generateId();
+            clean.created = raw.created || now;
+            clean.updated = raw.updated || now;
+
+            for (const key of Object.keys(raw)) {
+              const lowerKey = key.toLowerCase().trim();
+              const field = schemaFieldMap.get(lowerKey);
+              if (!field) continue;
+
+              let val = raw[key];
+              if (val === undefined || val === '') {
+                clean[field.name] = null;
+                continue;
+              }
+
+              if (field.type === 'number') {
+                const num = Number(val);
+                clean[field.name] = isNaN(num) ? null : num;
+              } else if (field.type === 'bool') {
+                clean[field.name] = val === true || val === 'true' || val === '1' || val === 1 ? 1 : 0;
+              } else if (field.type === 'json') {
+                clean[field.name] = typeof val === 'object' ? JSON.stringify(val) : String(val);
+              } else {
+                clean[field.name] = String(val);
+              }
+            }
+
+            if (collection.type === 'auth') {
+              clean.email = (raw.email || raw.Email || '').toLowerCase().trim();
+              if (!clean.email) {
+                throw new Error(`Row ${i + 1}: Email is required for auth collection`);
+              }
+              clean.passwordHash = defaultPasswordHash;
+              clean.tokenKey = generateTokenKey();
+              clean.verified = raw.verified === true || raw.verified === 'true' || raw.verified === 1 || raw.verified === '1' ? 1 : 0;
+              clean.emailVisibility = raw.emailVisibility === true || raw.emailVisibility === 'true' || raw.emailVisibility === 1 || raw.emailVisibility === '1' ? 1 : 0;
+            }
+
+            const colNames = Object.keys(clean).map(c => `"${c}"`).join(',');
+            const placeholders = Object.keys(clean).map(() => '?').join(',');
+            const values = Object.values(clean);
+
+            db.run(`INSERT OR REPLACE INTO "${collection.name}" (${colNames}) VALUES (${placeholders})`, values);
+            insertedCount++;
+          } catch (rowErr) {
+            errors.push({ row: i + 1, error: rowErr.message });
+          }
+        }
+      });
+
+      try {
+        RealtimeHub.dispatch('create', collection.name, { id: 'import', count: insertedCount });
+      } catch {}
+
+      res.status(200).json({
+        success: true,
+        message: `Successfully imported ${insertedCount} record(s) into "${collection.name}"`,
+        count: insertedCount,
+        totalRows: rows.length,
+        errors: errors.slice(0, 10),
+      });
+    } catch (error) {
+      res.status(500).json({ code: 500, message: error.message || 'Import failed' });
+    }
+  });
 });
 
 // --- CRUD RECORD ENDPOINTS ---

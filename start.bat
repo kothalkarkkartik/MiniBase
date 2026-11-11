@@ -5,6 +5,11 @@ echo ===================================================
 echo   ⚡ MiniBase BaaS — Local Studio Launcher
 echo ===================================================
 
+:: Check if portable node is installed
+if exist "C:\Users\user\node-v22\node.exe" (
+    set "PATH=C:\Users\user\node-v22;%PATH%"
+)
+
 :: Check if node is installed
 where node >nul 2>nul
 if %errorlevel% neq 0 (

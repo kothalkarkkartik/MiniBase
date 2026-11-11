@@ -74,6 +74,15 @@ class AdminAPI {
     return res;
   }
 
+  async register(email, password) {
+    const res = await this.request('/api/admins/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    this.setAuth(res.token, res.admin);
+    return res;
+  }
+
   async login(email, password) {
     const res = await this.request('/api/admins/auth-with-password', {
       method: 'POST',
@@ -193,6 +202,39 @@ class AdminAPI {
   async deleteRecord(collectionName, id) {
     return this.request(`/api/collections/${collectionName}/records/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  // Bulk Export & Import
+  async exportCollection(collectionName, format = 'csv') {
+    const url = `${this.baseUrl}/api/collections/${collectionName}/export?format=${format}`;
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`Export failed (${res.status})`);
+    const blob = await res.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `${collectionName}_export_${Date.now()}.${format}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(downloadUrl);
+  }
+
+  async importCollection(collectionName, fileOrData) {
+    const isFile = fileOrData instanceof File || fileOrData instanceof Blob;
+    let body;
+    if (isFile) {
+      body = new FormData();
+      body.append('file', fileOrData);
+    } else {
+      body = typeof fileOrData === 'string' ? JSON.stringify({ csv: fileOrData }) : JSON.stringify(fileOrData);
+    }
+    return this.request(`/api/collections/${collectionName}/import`, {
+      method: 'POST',
+      body,
     });
   }
 

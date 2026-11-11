@@ -12,6 +12,7 @@ import { batchRouter } from './routes/batch.js';
 import { filesRouter } from './routes/files.js';
 import { realtimeRouter } from './routes/realtime.js';
 import { HookManager } from './core/hooks.js';
+import { generateOpenApiSpec } from './core/docs.js';
 
 export const app = express();
 
@@ -65,6 +66,24 @@ const handleHealth = (_req, res) => {
 };
 app.get('/api/health', handleHealth);
 app.get('/minibase/api/health', handleHealth);
+
+// Dynamic OpenAPI Specification
+app.get('/api/openapi.json', (req, res) => {
+  const spec = generateOpenApiSpec(req);
+  res.json(spec);
+});
+app.get('/minibase/api/openapi.json', (req, res) => {
+  const spec = generateOpenApiSpec(req);
+  res.json(spec);
+});
+
+// Interactive API Docs
+app.get('/docs', (_req, res) => {
+  res.sendFile(path.resolve('./public/docs.html'));
+});
+app.get('/minibase/docs', (_req, res) => {
+  res.sendFile(path.resolve('./public/docs.html'));
+});
 
 // Public Tunnel Endpoints
 const handleGetTunnel = (_req, res) => {
