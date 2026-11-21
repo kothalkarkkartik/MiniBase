@@ -3,28 +3,38 @@ import 'package:flutter/material.dart';
 import 'minibase.dart';
 
 void main() {
-  runApp(const WallVibeApp());
+  runApp(const MiniBaseWallpaperApp());
 }
 
-class WallVibeApp extends StatelessWidget {
-  const WallVibeApp({super.key});
+class MiniBaseWallpaperApp extends StatelessWidget {
+  const MiniBaseWallpaperApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WallVibe 4K',
+      title: 'MiniBase Wallpapers',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF07090E),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF10B981),
-          secondary: Color(0xFF38BDF8),
-          surface: Color(0xFF0E121A),
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF8F8F8),
+        colorScheme: const ColorScheme.light(
+          primary: Colors.black,
+          onPrimary: Colors.white,
+          secondary: Colors.black,
+          surface: Colors.white,
+          onSurface: Colors.black,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0A0E16),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
           elevation: 0,
           scrolledUnderElevation: 0,
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
         ),
       ),
       home: const WallpapersHomePage(),
@@ -40,8 +50,12 @@ class WallpapersHomePage extends StatefulWidget {
 }
 
 class _WallpapersHomePageState extends State<WallpapersHomePage> {
-  // Default URL points to current live Cloudflare tunnel or local backend
-  String _serverUrl = 'https://experienced-reporter-kinase-warrant.trycloudflare.com';
+  // Active Public Tunnel & Local Wi-Fi URLs
+  static const String publicTunnelUrl = 'https://gps-assume-thehun-cord.trycloudflare.com';
+  static const String localWifiUrl = 'http://192.168.1.95:8090';
+  static const String emulatorUrl = 'http://10.0.2.2:8090';
+
+  String _serverUrl = publicTunnelUrl;
   late MiniBase _mb;
 
   final TextEditingController _searchController = TextEditingController();
@@ -53,11 +67,11 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
   String _searchQuery = '';
 
   final List<Map<String, dynamic>> _categories = [
-    {'id': 'all', 'label': 'All', 'icon': Icons.grid_view_rounded},
-    {'id': 'Nature', 'label': 'Nature', 'icon': Icons.park_outlined},
-    {'id': 'Abstract', 'label': 'Abstract', 'icon': Icons.palette_outlined},
-    {'id': 'Architecture', 'label': 'Architecture', 'icon': Icons.apartment_outlined},
-    {'id': 'Cyberpunk', 'label': 'Cyberpunk', 'icon': Icons.blur_on_rounded},
+    {'id': 'all', 'label': 'ALL'},
+    {'id': 'Nature', 'label': 'NATURE'},
+    {'id': 'Abstract', 'label': 'ABSTRACT'},
+    {'id': 'Architecture', 'label': 'ARCHITECTURE'},
+    {'id': 'Minimal', 'label': 'MINIMAL'},
   ];
 
   @override
@@ -99,8 +113,12 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF1E2430),
-            content: Text('Failed to load: $e', style: const TextStyle(color: Color(0xFFFCA5A5))),
+            backgroundColor: Colors.black,
+            content: Text(
+              'Backend Error: $e\nTap settings icon to check server URL.',
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -131,23 +149,64 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0E121A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withOpacity(0.1))),
-        title: const Text('Backend Server URL', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+          side: BorderSide(color: Colors.black, width: 2.5),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                boxShadow: [BoxShadow(color: Colors.black, offset: Offset(2, 2))],
+              ),
+              child: const Icon(Icons.dns_outlined, color: Colors.white, size: 16),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'MINIBASE BACKEND URL',
+              style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Enter local or live Cloudflare tunnel URL:', style: TextStyle(color: Colors.white70, fontSize: 12.5)),
+            const Text(
+              'Select a preset connection or enter custom URL:',
+              style: TextStyle(color: Color(0xFF555555), fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+
+            // Quick Preset Buttons
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _buildPresetButton('Live Tunnel', publicTunnelUrl, urlController),
+                _buildPresetButton('Local Wi-Fi', localWifiUrl, urlController),
+                _buildPresetButton('Emulator', emulatorUrl, urlController),
+              ],
+            ),
             const SizedBox(height: 12),
-            TextField(
-              controller: urlController,
-              style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 13, fontFamily: 'monospace'),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: const Color(0xFF07090E),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF10B981))),
+
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.black, width: 2),
+                boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(2, 2))],
+              ),
+              child: TextField(
+                controller: urlController,
+                style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w700),
+                decoration: const InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  border: InputBorder.none,
+                  hintText: 'http://...',
+                ),
               ),
             ),
           ],
@@ -155,7 +214,7 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text('CANCEL', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -170,13 +229,36 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: const Color(0xFF042F1A),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero,
+                side: BorderSide(color: Colors.black, width: 2),
+              ),
+              elevation: 0,
             ),
-            child: const Text('Save & Reconnect', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('SAVE & CONNECT', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPresetButton(String label, String url, TextEditingController controller) {
+    return InkWell(
+      onTap: () {
+        controller.text = url;
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0F0F0),
+          border: Border.all(color: Colors.black, width: 1.5),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
+        ),
       ),
     );
   }
@@ -191,86 +273,95 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
       builder: (ctx) => Container(
         height: MediaQuery.of(context).size.height * 0.88,
         decoration: const BoxDecoration(
-          color: Color(0xFF0E121A),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(top: BorderSide(color: Colors.white12)),
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.black, width: 3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black,
+              offset: Offset(0, -6),
+              blurRadius: 0,
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Handle bar
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 10, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+            // Retro Window Header Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                border: Border(bottom: BorderSide(color: Colors.black, width: 2)),
+              ),
+              child: Row(
+                children: [
+                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF888888), shape: BoxShape.circle)),
+                  const SizedBox(width: 5),
+                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF888888), shape: BoxShape.circle)),
+                  const SizedBox(width: 5),
+                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF888888), shape: BoxShape.circle)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      item['title'] ?? 'WALLPAPER PREVIEW',
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(border: Border.all(color: Colors.white)),
+                      child: const Text('✕', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                ],
               ),
             ),
 
-            // Image Container
+            // Image Display
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    color: Colors.black,
-                    child: Image.network(
-                      imgUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.broken_image_rounded, size: 48, color: Colors.white24),
-                      ),
-                    ),
+              child: Container(
+                color: const Color(0xFF111111),
+                child: Image.network(
+                  imgUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Center(
+                    child: Text('IMAGE FAILED TO LOAD', style: TextStyle(color: Colors.white54, fontWeight: FontWeight.w700)),
                   ),
                 ),
               ),
             ),
 
-            // Metadata & Download action
-            Padding(
-              padding: const EdgeInsets.all(20),
+            // Retro Bottom Meta & Download Action
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.black, width: 2)),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item['title'] ?? 'Wallpaper',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF38BDF8).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFF38BDF8).withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          item['category'] ?? 'General',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF38BDF8), fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    (item['title'] ?? 'Wallpaper').toString().toUpperCase(),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
                     children: [
-                      const Icon(Icons.download_rounded, size: 14, color: Color(0xFF10B981)),
-                      const SizedBox(width: 4),
-                      Text('${item['downloads'] ?? 0} total downloads', style: const TextStyle(color: Colors.white60, fontSize: 12)),
-                      const Spacer(),
-                      const Text('4K Ultra-HD', style: TextStyle(color: Color(0xFF818CF8), fontSize: 11, fontWeight: FontWeight.w600)),
+                      _buildRetroTag(item['category'] ?? 'NATURE', isInverted: true),
+                      _buildRetroTag('ID: ${(item['id'] ?? '').toString().substring(0, 8)}...'),
+                      _buildRetroTag('4K ULTRA-HD'),
+                      _buildRetroTag('SQLITE WAL'),
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  // Download Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -283,23 +374,34 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
                           });
                           if (ctx.mounted) {
                             Navigator.pop(ctx);
+                          }
+                          if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                backgroundColor: Color(0xFF042F1A),
-                                content: Text('Wallpaper downloaded successfully!', style: TextStyle(color: Color(0xFF6EE7B7))),
+                                backgroundColor: Colors.black,
+                                content: Text(
+                                  '✓ Download recorded in MiniBase database!',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                                ),
                               ),
                             );
                           }
                         } catch (_) {}
                       },
-                      icon: const Icon(Icons.file_download_outlined, size: 20),
-                      label: Text('Download 4K (${item['downloads'] ?? 0})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      icon: const Icon(Icons.download_rounded, size: 18),
+                      label: Text(
+                        'DOWNLOAD WALLPAPER (${item['downloads'] ?? 0})',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.5),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: const Color(0xFF042F1A),
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 4,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
+                          side: BorderSide(color: Colors.black, width: 2),
+                        ),
+                        elevation: 0,
                       ),
                     ),
                   ),
@@ -312,6 +414,25 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
     );
   }
 
+  Widget _buildRetroTag(String text, {bool isInverted = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: isInverted ? Colors.black : Colors.white,
+        border: Border.all(color: Colors.black, width: 1.5),
+      ),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: isInverted ? Colors.white : Colors.black,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -319,58 +440,96 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
+              padding: const EdgeInsets.all(5),
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                boxShadow: [BoxShadow(color: Colors.black, offset: Offset(2, 2))],
               ),
-              child: const Icon(Icons.bolt_rounded, color: Color(0xFF10B981), size: 18),
+              child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 10),
-            const Text('WallVibe', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 19, letterSpacing: -0.5)),
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFF38BDF8).withOpacity(0.15),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text('4K', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF38BDF8))),
-            ),
+            const Text('MINIBASE', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, letterSpacing: -0.5)),
+            const SizedBox(width: 4),
+            const Text('// WALLPAPERS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF666666))),
           ],
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(2.5),
+          child: Container(color: Colors.black, height: 2.5),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.tune_rounded, size: 20, color: Colors.white70),
-            tooltip: 'Server Settings',
+            icon: const Icon(Icons.settings_outlined, size: 20, color: Colors.black),
+            tooltip: 'Server Connection',
             onPressed: _openServerConfigDialog,
           ),
-          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, size: 20, color: Colors.black),
+            tooltip: 'Reload',
+            onPressed: _loadWallpapers,
+          ),
+          const SizedBox(width: 6),
         ],
       ),
       body: Column(
         children: [
-          // Live Search Bar
+          // Live Retro Telemetry Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              border: Border(bottom: BorderSide(color: Colors.black, width: 2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 6),
+                const Text(
+                  'SQLITE WAL',
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                ),
+                const Spacer(),
+                Text(
+                  'RECORDS: ${_wallpapers.length}',
+                  style: const TextStyle(color: Color(0xFFCCCCCC), fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(width: 8),
+                const Text('|', style: TextStyle(color: Color(0xFF555555), fontSize: 10)),
+                const SizedBox(width: 8),
+                const Text(
+                  'LATENCY: <0.15ms',
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+
+          // Live Retro Search Box
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF0E121A),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                color: Colors.white,
+                border: Border.all(color: Colors.black, width: 2.2),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black, offset: Offset(3, 3), blurRadius: 0),
+                ],
               ),
               child: TextField(
                 controller: _searchController,
                 onChanged: _onSearchChanged,
-                style: const TextStyle(fontSize: 13.5, color: Colors.white),
+                style: const TextStyle(fontSize: 13, color: Colors.black, fontWeight: FontWeight.w700),
                 decoration: InputDecoration(
-                  hintText: 'Live search wallpapers...',
-                  hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                  prefixIcon: const Icon(Icons.search_rounded, color: Colors.white38, size: 20),
+                  hintText: 'SEARCH WALLPAPERS...',
+                  hintStyle: const TextStyle(color: Color(0xFF888888), fontSize: 12, fontWeight: FontWeight.w700),
+                  prefixIcon: const Icon(Icons.search_rounded, color: Colors.black, size: 20),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 18, color: Colors.white54),
+                          icon: const Icon(Icons.close_rounded, size: 18, color: Colors.black),
                           onPressed: () {
                             _searchController.clear();
                             _onSearchChanged('');
@@ -378,53 +537,44 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
                         )
                       : null,
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                 ),
               ),
             ),
           ),
 
-          // Horizontal Category Tabs
+          // Horizontal Retro Category Chips
           SizedBox(
-            height: 38,
+            height: 36,
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               scrollDirection: Axis.horizontal,
               itemCount: _categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, __) => const SizedBox(width: 7),
               itemBuilder: (context, idx) {
                 final cat = _categories[idx];
                 final isSelected = _selectedCategory == cat['id'];
                 return InkWell(
                   onTap: () => _onCategorySelected(cat['id']),
-                  borderRadius: BorderRadius.circular(20),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF10B981) : const Color(0xFF0E121A),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected ? const Color(0xFF10B981) : Colors.white.withOpacity(0.06),
-                      ),
+                      color: isSelected ? Colors.black : Colors.white,
+                      border: Border.all(color: Colors.black, width: 2),
+                      boxShadow: isSelected
+                          ? const [BoxShadow(color: Color(0xFF666666), offset: Offset(2, 2))]
+                          : const [BoxShadow(color: Colors.black, offset: Offset(2, 2))],
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          cat['icon'] as IconData,
-                          size: 14,
-                          color: isSelected ? const Color(0xFF042F1A) : Colors.white60,
+                    child: Center(
+                      child: Text(
+                        cat['label'] as String,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: isSelected ? Colors.white : Colors.black,
+                          letterSpacing: 0.5,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          cat['label'] as String,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            color: isSelected ? const Color(0xFF042F1A) : Colors.white70,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 );
@@ -436,45 +586,50 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
           // Wallpapers Grid
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981), strokeWidth: 2.5))
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3),
+                  )
                 : _wallpapers.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0E121A),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        child: Container(
+                          margin: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.black, width: 2.2),
+                            boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.search_off_rounded, size: 40, color: Colors.black),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'NO WALLPAPERS FOUND',
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.black),
                               ),
-                              child: const Icon(Icons.search_off_rounded, size: 40, color: Color(0xFF38BDF8)),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isNotEmpty ? 'Record Not Found' : 'No Wallpapers Available',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _searchQuery.isNotEmpty ? 'No wallpaper matched "$_searchQuery"' : 'No wallpapers in this category yet',
-                              style: const TextStyle(color: Colors.white54, fontSize: 13),
-                            ),
-                          ],
+                              const SizedBox(height: 6),
+                              Text(
+                                _searchQuery.isNotEmpty
+                                    ? 'No record matched "$_searchQuery"'
+                                    : 'No wallpapers available in this category.',
+                                style: const TextStyle(color: Color(0xFF666666), fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     : RefreshIndicator(
                         onRefresh: _loadWallpapers,
-                        color: const Color(0xFF10B981),
-                        backgroundColor: const Color(0xFF0E121A),
+                        color: Colors.black,
+                        backgroundColor: Colors.white,
                         child: GridView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            crossAxisSpacing: 14,
+                            crossAxisSpacing: 12,
                             mainAxisSpacing: 14,
-                            childAspectRatio: 0.62,
+                            childAspectRatio: 0.64,
                           ),
                           itemCount: _wallpapers.length,
                           itemBuilder: (context, idx) {
@@ -485,93 +640,99 @@ class _WallpapersHomePageState extends State<WallpapersHomePage> {
                               onTap: () => _openWallpaperPreview(item),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0E121A),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.white.withOpacity(0.08)),
-                                  boxShadow: [
+                                  color: Colors.white,
+                                  border: Border.all(color: Colors.black, width: 2.2),
+                                  boxShadow: const [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.4),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
+                                      color: Colors.black,
+                                      offset: Offset(3.5, 3.5),
+                                      blurRadius: 0,
                                     ),
                                   ],
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      Image.network(
-                                        imgUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => const Center(
-                                          child: Icon(Icons.image_not_supported_outlined, color: Colors.white24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    // Top Bar
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                      color: Colors.black,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color(0xFF777777), shape: BoxShape.circle)),
+                                              const SizedBox(width: 3),
+                                              Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color(0xFF777777), shape: BoxShape.circle)),
+                                            ],
+                                          ),
+                                          Text(
+                                            (item['category'] ?? 'NATURE').toString().toUpperCase(),
+                                            style: const TextStyle(fontSize: 8.5, color: Colors.white, fontWeight: FontWeight.w800),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Image
+                                    Expanded(
+                                      child: Container(
+                                        color: const Color(0xFF111111),
+                                        child: Image.network(
+                                          imgUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => const Center(
+                                            child: Icon(Icons.broken_image_outlined, color: Colors.white30, size: 28),
+                                          ),
                                         ),
                                       ),
-                                      // Bottom Glass Overlay
-                                      Positioned(
-                                        left: 0,
-                                        right: 0,
-                                        bottom: 0,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.bottomCenter,
-                                              end: Alignment.topCenter,
-                                              colors: [
-                                                Colors.black.withOpacity(0.9),
-                                                Colors.black.withOpacity(0.4),
-                                                Colors.transparent,
-                                              ],
+                                    ),
+
+                                    // Bottom Details
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border(top: BorderSide(color: Colors.black, width: 1.5)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item['title'] ?? 'Wallpaper',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 12,
+                                              color: Colors.black,
                                             ),
                                           ),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                          const SizedBox(height: 3),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                item['title'] ?? 'Wallpaper',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                  color: Colors.white,
-                                                ),
+                                                'ID: ${(item['id'] ?? '').toString().substring(0, 5)}..',
+                                                style: const TextStyle(fontSize: 9.5, color: Color(0xFF777777), fontWeight: FontWeight.w700),
                                               ),
-                                              const SizedBox(height: 4),
                                               Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                    decoration: BoxDecoration(
-                                                      color: const Color(0xFF38BDF8).withOpacity(0.15),
-                                                      borderRadius: BorderRadius.circular(4),
-                                                    ),
-                                                    child: Text(
-                                                      item['category'] ?? 'General',
-                                                      style: const TextStyle(fontSize: 10, color: Color(0xFF38BDF8), fontWeight: FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      const Icon(Icons.file_download_outlined, size: 12, color: Color(0xFF10B981)),
-                                                      const SizedBox(width: 2),
-                                                      Text(
-                                                        '${item['downloads'] ?? 0}',
-                                                        style: const TextStyle(fontSize: 11, color: Colors.white70),
-                                                      ),
-                                                    ],
+                                                  const Icon(Icons.download_rounded, size: 11, color: Colors.black),
+                                                  const SizedBox(width: 2),
+                                                  Text(
+                                                    '${item['downloads'] ?? 0}',
+                                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.black),
                                                   ),
                                                 ],
                                               ),
                                             ],
                                           ),
-                                        ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             );
