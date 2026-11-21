@@ -50,12 +50,12 @@ class WallpapersHomePage extends StatefulWidget {
 }
 
 class _WallpapersHomePageState extends State<WallpapersHomePage> {
-  // Active Public Tunnel & Local Wi-Fi URLs
-  static const String publicTunnelUrl = 'https://gps-assume-thehun-cord.trycloudflare.com';
+  // Connects Directly to YOUR PC as the Self-Hosted BaaS Backend
   static const String localWifiUrl = 'http://192.168.1.95:8090';
+  static const String publicTunnelUrl = 'https://domain-create-notify-closer.trycloudflare.com';
   static const String emulatorUrl = 'http://10.0.2.2:8090';
 
-  String _serverUrl = publicTunnelUrl;
+  String _serverUrl = localWifiUrl; // Direct to your PC!
   late MiniBase _mb;
 
   final TextEditingController _searchController = TextEditingController();
